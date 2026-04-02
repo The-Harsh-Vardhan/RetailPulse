@@ -2,10 +2,9 @@
 # MAGIC %md
 # MAGIC # Association Rules
 # MAGIC
-# MAGIC This notebook trains an FP-growth model on order baskets and persists the resulting rules to `mart_association_rules`.
+# MAGIC This notebook derives serverless-safe pairwise association rules from order baskets and persists the resulting rules to `mart_association_rules`.
 
 # COMMAND ----------
-from pyspark.ml.fpm import FPGrowth
 from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
@@ -39,17 +38,68 @@ baskets = (
     .filter(F.size("items") >= 2)
 )
 
-fp_growth = FPGrowth(
-    itemsCol="items",
-    minSupport=min_support,
-    minConfidence=min_confidence,
+total_baskets = baskets.count()
+assert total_baskets > 0, "No baskets were found for association-rule mining."
+
+basket_items = baskets.select(
+    "order_id",
+    F.explode("items").alias("product_id"),
 )
-fp_model = fp_growth.fit(baskets)
+
+antecedent_counts = basket_items.groupBy("product_id").agg(
+    F.count("*").alias("antecedent_order_count")
+)
+consequent_counts = basket_items.groupBy("product_id").agg(
+    F.count("*").alias("consequent_order_count")
+)
 
 rules = (
-    fp_model.associationRules
-    .withColumn("antecedent_size", F.size("antecedent"))
-    .withColumn("consequent_size", F.size("consequent"))
+    basket_items.alias("left")
+    .join(basket_items.alias("right"), "order_id")
+    .filter(F.col("left.product_id") != F.col("right.product_id"))
+    .groupBy(
+        F.col("left.product_id").alias("antecedent_product_id"),
+        F.col("right.product_id").alias("consequent_product_id"),
+    )
+    .agg(F.count("*").alias("pair_order_count"))
+    .join(
+        antecedent_counts,
+        F.col("antecedent_product_id") == antecedent_counts["product_id"],
+        "inner",
+    )
+    .drop(antecedent_counts["product_id"])
+    .join(
+        consequent_counts,
+        F.col("consequent_product_id") == consequent_counts["product_id"],
+        "inner",
+    )
+    .drop(consequent_counts["product_id"])
+    .withColumn("support", F.col("pair_order_count") / F.lit(float(total_baskets)))
+    .withColumn("confidence", F.col("pair_order_count") / F.col("antecedent_order_count"))
+    .withColumn(
+        "lift",
+        F.col("confidence") / (F.col("consequent_order_count") / F.lit(float(total_baskets))),
+    )
+    .filter(F.col("support") >= F.lit(min_support))
+    .filter(F.col("confidence") >= F.lit(min_confidence))
+    .withColumn("antecedent", F.array("antecedent_product_id"))
+    .withColumn("consequent", F.array("consequent_product_id"))
+    .withColumn("antecedent_size", F.lit(1))
+    .withColumn("consequent_size", F.lit(1))
+    .select(
+        "antecedent",
+        "consequent",
+        "antecedent_product_id",
+        "consequent_product_id",
+        "pair_order_count",
+        "antecedent_order_count",
+        "consequent_order_count",
+        "support",
+        "confidence",
+        "lift",
+        "antecedent_size",
+        "consequent_size",
+    )
 )
 
 (
@@ -65,12 +115,13 @@ display(rules.orderBy(F.desc("lift"), F.desc("confidence")).limit(10))
 seed_array = F.array(*[F.lit(product_id) for product_id in seed_products])
 recommendations = (
     rules.filter(F.size(F.array_except(F.col("antecedent"), seed_array)) == 0)
-    .withColumn("recommended_product_id", F.explode("consequent"))
-    .filter(~F.col("recommended_product_id").isin(seed_products))
+    .withColumn("recommended_product_id", F.col("consequent_product_id"))
+    .filter(~F.col("consequent_product_id").isin(seed_products))
     .groupBy("recommended_product_id")
     .agg(
         F.max("confidence").alias("best_confidence"),
         F.max("lift").alias("best_lift"),
+        F.count("*").alias("matched_rule_count"),
     )
     .join(
         dim_product.select(
@@ -80,9 +131,8 @@ recommendations = (
         "recommended_product_id",
         "left",
     )
-    .orderBy(F.desc("best_lift"), F.desc("best_confidence"))
+    .orderBy(F.desc("matched_rule_count"), F.desc("best_lift"), F.desc("best_confidence"))
     .limit(3)
 )
 
 display(recommendations)
-

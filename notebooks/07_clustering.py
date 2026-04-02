@@ -32,10 +32,12 @@ feature_columns = [
     "active_days",
 ]
 
-user_features = (
-    spark.table(qname("mart_user_features"))
-    .fillna(0.0, subset=feature_columns)
-)
+user_features = spark.table(qname("mart_user_features"))
+for stale_column in ("cluster_id", "chosen_k"):
+    if stale_column in user_features.columns:
+        user_features = user_features.drop(stale_column)
+
+user_features = user_features.fillna(0.0, subset=feature_columns)
 
 assembler = VectorAssembler(inputCols=feature_columns, outputCol="feature_vector")
 assembled = assembler.transform(user_features)
@@ -47,14 +49,15 @@ scaler = StandardScaler(
 )
 scaled = scaler.fit(assembled).transform(assembled)
 
-evaluator = ClusteringEvaluator(featuresCol="features")
 results = []
 predictions_by_k = {}
 
 for k_value in (3, 4, 5):
+    prediction_col = f"cluster_id_{k_value}"
+    evaluator = ClusteringEvaluator(featuresCol="features", predictionCol=prediction_col)
     model = KMeans(
         featuresCol="features",
-        predictionCol="cluster_id",
+        predictionCol=prediction_col,
         k=k_value,
         seed=42,
         maxIter=30,
@@ -69,9 +72,11 @@ display(scores_df)
 
 best_k = scores_df.first()["k"]
 best_predictions = predictions_by_k[best_k]
+best_prediction_col = f"cluster_id_{best_k}"
 
 clustered_user_features = (
     best_predictions.drop("feature_vector", "features")
+    .withColumnRenamed(best_prediction_col, "cluster_id")
     .withColumn("chosen_k", F.lit(int(best_k)))
 )
 
