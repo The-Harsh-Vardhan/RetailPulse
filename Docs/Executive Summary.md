@@ -1,33 +1,36 @@
 # Executive Summary
 
-RetailPulse is an end-to-end Databricks Free Edition project for grocery order analytics and recommendation. It is intentionally scoped to be submission-safe: the implementation uses the real strengths of the Instacart dataset and avoids unsupported claims about revenue or calendar-time forecasting. The repo now contains a notebook-first scaffold, local sampling utilities, test coverage for those utilities, and corrected documentation that matches current Databricks serverless behavior.
+RetailPulse is an end-to-end Databricks Free Edition project for grocery order analytics and recommendation. The implementation is intentionally structured for GitHub: canonical Databricks source notebooks in `.py`, generated `.ipynb` mirrors, local data-prep tooling, Databricks Asset Bundles for reproducible deployment, and GitHub Actions for validation plus manual-dispatch Databricks execution.
 
-## Final Scope
-- Deterministic 10% user sample from Instacart
-- Bronze, silver, and gold Delta pipeline
-- Star schema with order-line and order-grain facts
+## Implemented Scope
+- deterministic 10% user sample from Instacart
+- bronze, silver, and gold Delta pipeline
+- star schema with `fact_order_items` and `fact_orders`
 - OLAP using `CUBE` and `ROLLUP`
-- FP-growth recommendations
-- KMeans customer segmentation
-- Decision-tree classification
-- Linear-regression prediction of basket size
-- File-based streaming replay with `Trigger.AvailableNow`
+- FP-growth association rules
+- KMeans user segmentation
+- decision-tree classification
+- linear-regression basket-size prediction
+- replay-style streaming with `Trigger.AvailableNow`
 - `OPTIMIZE` and `ZORDER BY` benchmarking
 
-## Key Corrections
-- No price fields exist in Instacart, so the project focuses on order behavior instead of sales amount.
-- No absolute dates exist in Instacart, so the time dimension is based on day-of-week and hour-of-day slots.
-- Databricks Free Edition is serverless-only and quota-limited, so the implementation avoids RDD APIs, cache-based tuning, and continuous streaming assumptions.
+## Important Corrections
+- Instacart has no price fields, so the current implementation does not claim true sales analytics.
+- Instacart has no absolute transaction dates, so the time dimension is a slot-based dimension built from day-of-week and hour-of-day.
+- Databricks Free Edition is serverless-only and quota-limited, so the project avoids unsupported RDD workflows and avoids automatic Databricks runs on every Git push.
 
-## Repo Deliverables
-- `notebooks/00_setup.py` through `notebooks/12_report_pack.py`
-- `scripts/sample_instacart.py`
-- `scripts/split_stream_replay_batches.py`
-- `tests/test_sample_instacart.py`
-- `tests/test_split_stream_replay_batches.py`
-- Mermaid architecture assets and corrected markdown reports
+## GitHub-Ready Packaging
+- `notebooks/*.py` are the source of truth
+- `notebooks_ipynb/*.ipynb` are generated convenience copies
+- Databricks Asset Bundles define the full sequential rebuild job
+- GitHub Actions validate the repo and support manual Databricks execution
 
-## References
-- Databricks Free Edition limitations: https://docs.databricks.com/aws/en/getting-started/free-edition-limitations
-- Databricks serverless compute limitations: https://docs.databricks.com/en/compute/serverless/limitations.html
-- Instacart Open Data overview: https://www.instacart.com/datasets/grocery-shopping-2017
+## Future Works
+The following items were part of the broader original vision and are intentionally preserved as future work rather than being implied as complete:
+- MLflow experiment tracking
+- Databricks SQL or AI/BI dashboard
+- synthetic `product_price_map` and `estimated_sales_amount`
+- a second supervised model such as RandomForest
+- richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
+- an RDD-style Hadoop demo on non-serverless compute
+
