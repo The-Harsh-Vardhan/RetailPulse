@@ -1,0 +1,51 @@
+bundle:
+  name: retailpulse
+
+include:
+  - resources/*.yml
+
+sync:
+  exclude:
+    - .bundle/**
+    - __pycache__/**
+    - .git/**
+    - .github/**
+    - Docs/**
+    - assets/**
+    - notebooks_ipynb/**
+    - tests/**
+    - tmp/**
+    - "*.md"
+    - "*.pdf"
+    - "*.docx"
+    - "*.png"
+
+variables:
+  catalog:
+    description: Databricks catalog name. Leave empty to use the notebook default fallback.
+    default: ""
+  schema:
+    description: Databricks schema used by RetailPulse.
+    default: retailpulse
+  raw_volume:
+    description: Unity Catalog volume for uploaded sampled CSV files.
+    default: retailpulse_raw
+  replay_volume:
+    description: Unity Catalog volume for replay stream batches.
+    default: retailpulse_replay
+  checkpoint_volume:
+    description: Unity Catalog volume for streaming checkpoints.
+    default: retailpulse_checkpoints
+  batch_count:
+    description: Number of replay batches for the AvailableNow streaming demo.
+    default: "4"
+  replay_order_limit:
+    description: Maximum held-out orders to write as replay batches.
+    default: "4000"
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

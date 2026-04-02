@@ -1,0 +1,147 @@
+resources:
+  jobs:
+    retailpulse_full_rebuild:
+      name: retailpulse_full_rebuild
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+      tags:
+        project: retailpulse
+        platform: databricks-free-edition
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../notebooks/00_setup.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              raw_volume: ${var.raw_volume}
+              replay_volume: ${var.replay_volume}
+              checkpoint_volume: ${var.checkpoint_volume}
+
+        - task_key: sample_and_upload
+          depends_on:
+            - task_key: setup
+          notebook_task:
+            notebook_path: ../notebooks/01_sample_and_upload.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              raw_volume: ${var.raw_volume}
+
+        - task_key: bronze_ingest
+          depends_on:
+            - task_key: sample_and_upload
+          notebook_task:
+            notebook_path: ../notebooks/02_bronze_ingest.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              raw_volume: ${var.raw_volume}
+
+        - task_key: silver_transform
+          depends_on:
+            - task_key: bronze_ingest
+          notebook_task:
+            notebook_path: ../notebooks/03_silver_transform.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: gold_model
+          depends_on:
+            - task_key: silver_transform
+          notebook_task:
+            notebook_path: ../notebooks/04_gold_model.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: olap
+          depends_on:
+            - task_key: gold_model
+          notebook_task:
+            notebook_path: ../notebooks/05_olap.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: association_rules
+          depends_on:
+            - task_key: gold_model
+          notebook_task:
+            notebook_path: ../notebooks/06_association_rules.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: clustering
+          depends_on:
+            - task_key: gold_model
+          notebook_task:
+            notebook_path: ../notebooks/07_clustering.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: classifier
+          depends_on:
+            - task_key: clustering
+          notebook_task:
+            notebook_path: ../notebooks/08_classifier.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: regression
+          depends_on:
+            - task_key: clustering
+          notebook_task:
+            notebook_path: ../notebooks/09_regression.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: streaming_replay
+          depends_on:
+            - task_key: regression
+          notebook_task:
+            notebook_path: ../notebooks/10_streaming_replay.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              replay_volume: ${var.replay_volume}
+              checkpoint_volume: ${var.checkpoint_volume}
+              batch_count: ${var.batch_count}
+              replay_order_limit: ${var.replay_order_limit}
+
+        - task_key: optimize
+          depends_on:
+            - task_key: streaming_replay
+          notebook_task:
+            notebook_path: ../notebooks/11_optimize.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+
+        - task_key: report_pack
+          depends_on:
+            - task_key: optimize
+          notebook_task:
+            notebook_path: ../notebooks/12_report_pack.py
+            source: WORKSPACE
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}

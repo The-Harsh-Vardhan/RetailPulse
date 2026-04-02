@@ -5,10 +5,14 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.ipynb_checkpoints/
+.bundle/
+.databricks/
 .venv/
 venv/
 data/
 sample_data/
 output/
 tmp/
+tmp_test_artifacts/
 *.log
