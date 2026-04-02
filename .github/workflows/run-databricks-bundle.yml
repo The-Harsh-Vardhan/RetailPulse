@@ -1,0 +1,51 @@
+name: Run Databricks Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Databricks bundle target to validate, deploy, and run.
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+
+permissions:
+  contents: read
+
+jobs:
+  run_bundle:
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Check Databricks secrets
+        run: |
+          test -n "$DATABRICKS_HOST"
+          test -n "$DATABRICKS_TOKEN"
+
+      - name: Verify generated notebooks are current
+        run: python scripts/export_databricks_source_to_ipynb.py --check
+
+      - name: Validate bundle
+        run: databricks bundle validate -t "${{ github.event.inputs.target }}"
+
+      - name: Deploy bundle
+        run: databricks bundle deploy -t "${{ github.event.inputs.target }}"
+
+      - name: Run full rebuild job
+        run: databricks bundle run retailpulse_full_rebuild -t "${{ github.event.inputs.target }}"
