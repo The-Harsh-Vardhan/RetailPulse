@@ -51,6 +51,12 @@ Assets:
 - `Docs/`: report-facing and rebuild documentation
 - `.github/workflows/`: CI and manual Databricks automation
 
+## Automation Files
+- `databricks.yml`: bundle entrypoint and shared variables
+- `resources/retailpulse_job_resource.yml`: sequential `retailpulse_full_rebuild` job definition
+- `.github/workflows/ci.yml`: local validation on push and pull request
+- `.github/workflows/run-databricks-bundle.yml`: manual Databricks validate, deploy, and run workflow
+
 ## Notebook Format Policy
 The canonical notebook source lives in `notebooks/*.py`.
 
@@ -68,6 +74,20 @@ The rule for this repo is:
 - treat `.ipynb` as a convenience mirror, not the source of truth
 
 ## Quick Start
+### 0. Install Databricks CLI
+Windows:
+```powershell
+winget install Databricks.DatabricksCLI
+databricks version
+```
+
+Linux or macOS:
+```bash
+brew tap databricks/tap
+brew install databricks
+databricks version
+```
+
 ### 1. Clone the repo
 ```powershell
 git clone https://github.com/The-Harsh-Vardhan/RetailPulse.git
@@ -135,6 +155,20 @@ This repo is set up for two automation levels:
 
 This is deliberate. Databricks Free Edition is quota-limited and should not auto-run on every push.
 
+## What Is Automated And What Is Still Manual
+Automated:
+- workspace-authenticated bundle validation
+- bundle deployment
+- sequential notebook execution through `retailpulse_full_rebuild`
+- GitHub-triggered manual Databricks runs
+
+Still manual by design:
+- downloading the raw Instacart dataset
+- building the deterministic 10% local sample
+- uploading sampled CSV files into the raw Unity Catalog volume
+
+The last point is intentional. The project explicitly avoids pulling Kaggle data from notebooks, and `01_sample_and_upload.py` is a validation checkpoint rather than a downloader.
+
 ## Core Commands
 ### Local validation
 ```powershell
@@ -150,9 +184,25 @@ python scripts/export_databricks_source_to_ipynb.py
 ```
 
 ### Run the full job from GitHub
-- Open the `Run Databricks Bundle` workflow
+- Open the `Run Databricks Bundle` workflow in GitHub Actions
 - Click `Run workflow`
-- Provide the target if requested
+- Keep the `dev` target unless you define more bundle targets later
+
+### Automatic Databricks execution after one-time setup
+If your question is whether the repo can connect to Databricks and run all notebooks automatically, the answer is yes after two prerequisites are satisfied:
+1. Databricks CLI authentication is configured locally or through GitHub secrets.
+2. The sampled CSV files are already uploaded to the raw volume.
+
+After that, either of these is enough:
+```powershell
+databricks bundle deploy -t dev
+databricks bundle run retailpulse_full_rebuild -t dev
+```
+
+Or, from GitHub Actions:
+- run `.github/workflows/run-databricks-bundle.yml`
+- provide the `dev` target
+- let the workflow validate, deploy, and run the bundle job
 
 ## Notebook Execution Order
 1. `notebooks/00_setup.py`
@@ -206,7 +256,7 @@ You can later add screenshots to a folder such as `assets/screenshots/` and link
 Because `.py` is the reviewable source of truth in Git. The repo still provides generated `.ipynb` copies for people who prefer Jupyter-format files.
 
 ### Can I run everything automatically in Databricks?
-Yes. The Databricks Asset Bundle defines a single sequential multi-task job, and GitHub Actions can validate, deploy, and run it manually through `workflow_dispatch`.
+Yes, once the sampled raw CSVs are uploaded. The Databricks Asset Bundle defines a single sequential multi-task job, and GitHub Actions can validate, deploy, and run it manually through `workflow_dispatch`.
 
 ### Will GitHub automatically run Databricks on every push?
 No. The Databricks run workflow is manual by design to avoid Free Edition quota waste.
@@ -225,6 +275,8 @@ The following items were in the broader original vision but are not part of the 
 
 ## References
 - Databricks notebook import/export formats: https://docs.databricks.com/gcp/en/notebooks/notebook-export-import
+- Databricks CLI install: https://docs.databricks.com/aws/en/dev-tools/cli/install
+- Databricks CLI authentication: https://docs.databricks.com/aws/en/dev-tools/cli/authentication
 - Databricks CLI workspace commands: https://docs.databricks.com/gcp/en/dev-tools/cli/reference/workspace-commands
 - Databricks bundle commands: https://docs.databricks.com/aws/en/dev-tools/cli/bundle-commands
 - Databricks Asset Bundles: https://docs.databricks.com/aws/en/dev-tools/bundles/
