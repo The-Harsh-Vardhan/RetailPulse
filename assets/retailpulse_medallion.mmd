@@ -1,0 +1,7 @@
+flowchart LR
+    raw[Raw CSV upload<br/>Unity Catalog volume] --> bronze[Bronze Delta tables]
+    bronze --> silver[Silver cleansed and enriched tables]
+    silver --> gold[Gold star schema and marts]
+    gold --> analytics[OLAP, FP-growth, KMeans, classifier, regression]
+    gold --> replay[Replay batch export]
+    replay --> streaming[AvailableNow streaming aggregation]
