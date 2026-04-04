@@ -6,6 +6,8 @@ This script is designed for a 6 to 8 minute live demo. It keeps the presentation
 Open these tabs in advance:
 - The GitHub repository README
 - The successful Databricks job run page
+- The AI/BI dashboard: `RetailPulse Demo Dashboard`
+- `12_report_pack.py` as the notebook fallback
 - `05_olap.py`
 - `06_association_rules.py`
 - `07_clustering.py`
@@ -13,7 +15,6 @@ Open these tabs in advance:
 - `09_regression.py`
 - `10_streaming_replay.py`
 - `11_optimize.py`
-- `12_report_pack.py`
 
 Keep `Docs/showcase-summary.md` open as your backup source for numbers.
 
@@ -22,19 +23,19 @@ Explain that RetailPulse is a Databricks Free Edition grocery-order analytics pr
 
 ## Suggested Flow
 
-### 1. Open with the problem and scope
+### 1. Open with the dashboard first
 Talk track:
-- RetailPulse analyzes grocery ordering behavior on Databricks Free Edition.
-- The project uses a deterministic 10% sample so it stays reproducible and lightweight enough for serverless execution.
-- The stack includes bronze, silver, and gold Delta tables, OLAP, recommendations, clustering, classification, regression, and a replay-style streaming demo.
+- Start from the AI/BI dashboard so the audience sees one polished business surface instead of a notebook stack.
+- Use the dashboard to prove that RetailPulse is not just a code exercise; it has a presentable analytics layer on top of the Databricks pipeline.
+- If the dashboard fails or a panel needs drill-down, switch to `12_report_pack.py` as the fallback evidence hub.
 
 Proof to show:
-- README overview
-- Architecture diagram links
+- `RetailPulse Demo Dashboard`
+- `12_report_pack.py` fallback note
 
 ### 2. Show the successful end-to-end Databricks run
 Talk track:
-- The project is not just notebook fragments; it runs as a full sequential Databricks job.
+- The project is not just dashboard screenshots; it runs as a full sequential Databricks job.
 - The validated run completed successfully on April 3, 2026.
 
 Proof to show:
@@ -48,17 +49,17 @@ Talk track:
 - Gold creates dimensions, facts, and marts used by analytics and ML notebooks.
 
 Proof to show:
-- `12_report_pack.py` table-count output
+- Dashboard KPI counters or `12_report_pack.py` table-count output
 - Mention `fact_order_items` and `fact_orders`
 
-### 4. Show the OLAP analysis
+### 4. Show the business overview page
 Talk track:
-- The OLAP notebook uses `CUBE` and `ROLLUP` to produce subtotal and total views.
-- Produce, dairy eggs, and snacks dominate the item counts in the sample.
+- The dashboard leads with KPI counters, department demand, timing patterns, and basket-size behavior by daypart.
+- This turns the OLAP work into a business-readable story instead of making the audience parse raw SQL.
 
 Proof to show:
-- `05_olap.py`
-- Mention representative results such as Produce with `989,427` items
+- `Business Overview` page in the AI/BI dashboard
+- Fallback: `05_olap.py`
 
 ### 5. Show the recommendation engine
 Talk track:
@@ -66,7 +67,7 @@ Talk track:
 - The output is still a reusable `mart_association_rules` table with support, confidence, and lift.
 
 Proof to show:
-- `06_association_rules.py`
+- Dashboard top-rules table or `06_association_rules.py`
 - Example rule: `Organic Garlic -> Organic Yellow Onion`
 - Example recommendation for `Organic Raspberries`: `Bag of Organic Bananas` and `Organic Strawberries`
 
@@ -76,10 +77,20 @@ Talk track:
 - These segments map cleanly to business language: loyal frequent shoppers, light occasional shoppers, and large-basket stock-up shoppers.
 
 Proof to show:
-- `07_clustering.py`
+- Dashboard customer-segments widget or `07_clustering.py`
 - Point at the three segment profiles and their average orders, basket size, and reorder rate
 
-### 7. Show the predictive models
+### 7. Show execution and evidence
+Talk track:
+- The second dashboard page is about correctness, not cosmetics.
+- The streaming panel proves the replay output matches the equivalent batch aggregate.
+- The optimize panel records a real benchmark result, including the fact that optimization was slower on this sample.
+
+Proof to show:
+- `Execution And Evidence` page in the AI/BI dashboard
+- Fallback: `10_streaming_replay.py` and `11_optimize.py`
+
+### 8. Show the predictive models carefully
 Talk track:
 - The classifier predicts whether a user is a `power_user`, defined from the top quartile of `total_orders`.
 - The regression predicts basket size from order context and user history.
@@ -87,30 +98,20 @@ Talk track:
 - If challenged on the metrics, say the current feature construction is useful for demonstration but still needs a stricter leakage-safe redesign before submission-grade claims.
 
 Proof to show:
-- `08_classifier.py`
-- `09_regression.py`
+- Dashboard exploratory-metrics table or `08_classifier.py` and `09_regression.py`
 - Mention the current exploratory metrics:
   - classifier accuracy `0.9136` vs baseline `0.7445`
   - classifier AUC `0.8813`
   - regression RMSE `5.0945` vs baseline `7.6627`
 
-### 8. Show the streaming validation
+### 9. Close with project realism
 Talk track:
-- Free Edition serverless only supports `Trigger.AvailableNow`, so the project uses a replay-style stream rather than a continuously running stream.
-- The important point is correctness: the stream output matches the equivalent batch aggregate.
+- RetailPulse is showcaseable because it is reproducible, it runs end to end on Databricks Free Edition, and it has a presentable dashboard plus notebook fallback.
+- The project is also honest about what is exploratory, what is validated, and what still needs tightening before final submission.
 
 Proof to show:
-- `10_streaming_replay.py`
-- State that `158` order-slot groups were checked with `0` mismatches
-
-### 9. Close with optimization and project realism
-Talk track:
-- The project also benchmarks `OPTIMIZE` and `ZORDER BY`.
-- On this small sample the benchmark queries were slower after optimization, and the project records that honestly instead of forcing a success narrative.
-
-Proof to show:
-- `11_optimize.py`
-- `12_report_pack.py`
+- Dashboard pages recap
+- `12_report_pack.py` fallback
 
 ## Closing Line
 RetailPulse is showcaseable because it is reproducible, it runs end to end on Databricks Free Edition, and its key results are backed by validated tables plus a packaged evidence set instead of hand-waved notebook claims.

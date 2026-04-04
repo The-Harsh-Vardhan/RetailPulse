@@ -93,7 +93,10 @@ These supervised results are useful for demo discussion, but they should be pres
 ## Showcase Docs
 - [Showcase Summary](Docs/showcase-summary.md)
 - [Demo Script](Docs/demo-script.md)
+- [Dashboard Spec](Docs/databricks-dashboard-spec.md)
+- [Dashboard UI Guide](Docs/databricks-dashboard-ui-guide.md)
 - [Evidence Pack](Docs/evidence-pack.md)
+- [Canonical Dashboard Queries](sql/retailpulse_dashboard_queries.sql)
 - [Executive Summary](Docs/Executive%20Summary.md)
 - [14-Day Plan](Docs/Grocery%20Sales%20Analytics%20%26%20Recommendation%20on%20Databricks_%2014-Day%20Plan.md)
 - [Ultimate 2-Week Guide](Docs/Ultimate%202-Week%20Databricks%20Project_%20Data%20Mining%20%26%20Warehousing.md)
@@ -104,6 +107,7 @@ These supervised results are useful for demo discussion, but they should be pres
 - `notebooks/`: canonical Databricks source notebooks
 - `notebooks_ipynb/`: generated `.ipynb` mirrors for convenience and sharing
 - `scripts/`: local helper scripts and notebook export tooling
+- `sql/`: canonical Databricks SQL query definitions for AI/BI dashboard authoring
 - `tests/`: local unit tests for Python utilities
 - `resources/`: Databricks Asset Bundle resource definitions
 - `Docs/`: report-facing, rebuild, and showcase documentation
@@ -316,12 +320,12 @@ The final Databricks Free Edition serverless implementation uses pairwise associ
 Because the dataset sample is small. The benchmark was still run and recorded honestly, but `OPTIMIZE` plus `ZORDER BY` did not improve those two measured queries on this specific sample size.
 
 ### Can I use MLflow or dashboards later?
-Yes. They are listed under future work because the current repo focuses on the core submission-safe scope.
+Yes. MLflow is still future work. The repo now includes dashboard build assets, canonical SQL queries, and a notebook-dashboard fallback, but the live AI/BI dashboard still needs to be created in the Databricks workspace.
 
 ## Future Works
 The following items were in the broader original vision but are not part of the current implemented scope:
 - MLflow experiment tracking for models and artifacts
-- Databricks SQL or AI/BI dashboard for presentation-ready visuals
+- Published AI/BI dashboard with richer filters, layout polish, and workspace screenshots committed as final evidence
 - Synthetic `product_price_map` plus `estimated_sales_amount`
 - A second supervised model such as RandomForest
 - Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
@@ -336,3 +340,5 @@ The following items were in the broader original vision but are not part of the 
 - Databricks Asset Bundles: https://docs.databricks.com/aws/en/dev-tools/bundles/
 - Databricks GitHub CI/CD guidance: https://docs.databricks.com/gcp/en/dev-tools/ci-cd/github
 - Databricks Free Edition limitations: https://docs.databricks.com/aws/en/getting-started/free-edition-limitations
+
+

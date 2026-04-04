@@ -5,6 +5,26 @@
 # MAGIC This notebook assembles the final evidence tables used in the written report and demo.
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC ## Notebook Dashboard Fallback
+# MAGIC
+# MAGIC Use the AI/BI dashboard as the primary live-demo surface.
+# MAGIC
+# MAGIC If the dashboard is unavailable or a panel needs drill-down, use this notebook as the fallback dashboard in this order:
+# MAGIC 1. table counts
+# MAGIC 2. OLAP cube
+# MAGIC 3. OLAP rollup
+# MAGIC 4. OLAP basket analysis
+# MAGIC 5. recommendation rules
+# MAGIC 6. cluster profiles
+# MAGIC 7. stream validation
+# MAGIC 8. optimize summary
+# MAGIC 9. classifier metrics
+# MAGIC 10. regression metrics
+# MAGIC
+# MAGIC Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
+
+# COMMAND ----------
 from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
