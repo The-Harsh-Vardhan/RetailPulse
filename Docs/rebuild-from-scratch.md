@@ -4,12 +4,12 @@ This guide is the end-to-end rebuild path for a new machine, a new Databricks wo
 
 ## Goal
 By the end of this guide you should have:
-- the repository cloned locally
-- a deterministic 10% Instacart sample created locally
+- The repository cloned locally
+- A deterministic 10% Instacart sample created locally
 - `.ipynb` mirrors regenerated from the canonical Databricks source notebooks
-- a Databricks Free Edition workspace authenticated through the Databricks CLI
-- the `retailpulse_full_rebuild` bundle job deployed
-- the full notebook sequence executed in Databricks after raw sample upload
+- A Databricks Free Edition workspace authenticated through the Databricks CLI
+- The `retailpulse_full_rebuild` bundle job deployed
+- The full notebook sequence executed in Databricks after raw sample upload
 
 ## 1. Prerequisites
 
@@ -19,8 +19,8 @@ By the end of this guide you should have:
 - Databricks CLI 0.205 or newer
 
 ### Platform
-- a Databricks Free Edition workspace
-- permission to create a schema and Unity Catalog volumes in that workspace
+- A Databricks Free Edition workspace
+- Permission to create a schema and Unity Catalog volumes in that workspace
 
 ### Dataset
 Download these CSV files from the Instacart dataset source you are authorized to use:
@@ -61,9 +61,9 @@ RetailPulse keeps Databricks source notebooks in `notebooks/*.py` as the editabl
 Generated mirrors live in `notebooks_ipynb/*.ipynb`.
 
 The maintenance rule is:
-- edit only `notebooks/*.py`
-- regenerate `.ipynb` mirrors after notebook changes
-- commit both formats when notebooks change
+- Edit only `notebooks/*.py`
+- Regenerate `.ipynb` mirrors after notebook changes
+- Commit both formats when notebooks change
 
 ## 5. Run Local Validation Before Touching Databricks
 ```powershell
@@ -88,12 +88,12 @@ python scripts/sample_instacart.py `
 ```
 
 Expected outputs in the sample directory:
-- sampled `orders.csv`
-- filtered `order_products__prior.csv`
-- filtered `order_products__train.csv`
-- copied `products.csv`
-- copied `aisles.csv`
-- copied `departments.csv`
+- Sampled `orders.csv`
+- Filtered `order_products__prior.csv`
+- Filtered `order_products__train.csv`
+- Copied `products.csv`
+- Copied `aisles.csv`
+- Copied `departments.csv`
 - `sample_manifest.json`
 
 ## 7. Regenerate The `.ipynb` Mirrors
@@ -157,17 +157,17 @@ databricks bundle deploy -t dev
 ```
 
 What this does:
-- validates bundle syntax and notebook paths
-- syncs the repo files needed by the bundle to the workspace
-- creates or updates the `retailpulse_full_rebuild` job
+- Validates bundle syntax and notebook paths
+- Syncs the repo files needed by the bundle to the workspace
+- Creates or updates the `retailpulse_full_rebuild` job
 
 ## 11. Bootstrap The Workspace Once Before The Full Run
 This project has one intentional manual checkpoint: raw data upload.
 
 Why:
-- the project does not pull Kaggle data from notebooks
+- The project does not pull Kaggle data from notebooks
 - `01_sample_and_upload.py` is a validator, not a downloader
-- the raw Unity Catalog volume must exist before you can upload sampled CSVs
+- The raw Unity Catalog volume must exist before you can upload sampled CSVs
 
 ### First bootstrap sequence
 1. Deploy the bundle.
@@ -193,9 +193,9 @@ Upload these sampled files into the raw volume:
 - `departments.csv`
 
 Important:
-- use the sampled files for `orders` and the two `order_products` files
-- use the lookup files as-is
-- do not rename the files
+- Use the sampled files for `orders` and the two `order_products` files
+- Use the lookup files as-is
+- Do not rename the files
 
 ## 13. Run The Full Databricks Workflow
 After the upload is complete:
@@ -221,37 +221,41 @@ The job runs these notebooks in order:
 ## 14. What To Expect From Each Stage
 
 ### Bronze
-- raw CSVs land in Delta tables with explicit schemas
-- row-count checks should align with uploaded files
+- Raw CSVs land in Delta tables with explicit schemas
+- Row-count checks should align with uploaded files
 
 ### Silver
-- prior and train order items are unified
-- products are enriched with aisle and department attributes
-- user history features are materialized
+- Prior and train order items are unified
+- Products are enriched with aisle and department attributes
+- User history features are materialized
 
 ### Gold
-- dimensions and fact tables are created
-- user mart and association-rule mart are created
-- replay-stream metrics table is written after the streaming notebook
+- Dimensions and fact tables are created
+- User mart and association-rule mart are created
+- Replay-stream metrics table is written after the streaming notebook
 
 ### Analytics And ML
 - OLAP outputs should show `CUBE` and `ROLLUP` totals
-- FP-growth should produce non-trivial rules
+- Association-rule mining should produce non-trivial rules
 - KMeans should evaluate `k = 3, 4, 5`
-- classifier should beat the majority baseline
-- regression should beat the mean baseline or be treated as exploratory
+- Classifier should beat the majority baseline
+- Regression should beat the mean baseline or be treated as exploratory
 
 ## 15. Collect Final Artifacts
 After a successful run, capture:
-- screenshots of OLAP outputs
-- top association rules
-- cluster summaries
-- classifier metrics
-- regression metrics
-- replay-stream versus batch validation
-- optimize timing evidence
+- Screenshots of OLAP outputs
+- Top association rules
+- Cluster summaries
+- Classifier metrics
+- Regression metrics
+- Replay-stream versus batch validation
+- Optimize timing evidence
 
 Use `12_report_pack.py` to assemble the final report-facing outputs.
+
+For the finished demo package, also use:
+- `Docs/showcase-summary.md`
+- `Docs/demo-script.md`
 
 ## 16. Run Through GitHub Actions Instead Of The Local CLI
 If you want GitHub to trigger the deploy-and-run flow after setup:
@@ -268,48 +272,48 @@ If you want GitHub to trigger the deploy-and-run flow after setup:
 Behavior:
 - `CI` runs on push and pull request
 - `Run Databricks Bundle` is manual only
-- the manual workflow validates, deploys, and runs the Databricks bundle job
+- The manual workflow validates, deploys, and runs the Databricks bundle job
 
 ## 17. Common Failure Modes
 
 ### `databricks bundle validate -t dev` fails
-- verify the CLI version
-- verify authentication
-- verify that you are running the command from the repo root
+- Verify the CLI version
+- Verify authentication
+- Verify that you are running the command from the repo root
 
 ### `01_sample_and_upload.py` fails
-- one or more required CSV files are missing from the raw volume
-- a file was uploaded under the wrong name
-- the files were uploaded to the wrong catalog, schema, or volume
+- One or more required CSV files are missing from the raw volume
+- A file was uploaded under the wrong name
+- The files were uploaded to the wrong catalog, schema, or volume
 
 ### Streaming replay fails
-- the replay or checkpoint volume paths are wrong
-- the workspace does not allow the target path
-- you changed the notebook away from `Trigger.AvailableNow`
+- The replay or checkpoint volume paths are wrong
+- The workspace does not allow the target path
+- You changed the notebook away from `Trigger.AvailableNow`
 
 ### `.ipynb` files drift from `.py`
-- rerun `python scripts/export_databricks_source_to_ipynb.py`
-- rerun `python scripts/export_databricks_source_to_ipynb.py --check`
-- commit the regenerated mirrors
+- Rerun `python scripts/export_databricks_source_to_ipynb.py`
+- Rerun `python scripts/export_databricks_source_to_ipynb.py --check`
+- Commit the regenerated mirrors
 
 ## 18. Rebuild Checklist
-- clone the repo
-- install the Databricks CLI
-- run local tests
-- create the local sample
-- regenerate `.ipynb`
-- authenticate Databricks CLI
-- validate and deploy the bundle
-- run `00_setup.py` once
-- upload sampled CSVs
-- run `retailpulse_full_rebuild`
-- collect outputs from `12_report_pack.py`
+- Clone the repo
+- Install the Databricks CLI
+- Run local tests
+- Create the local sample
+- Regenerate `.ipynb`
+- Authenticate Databricks CLI
+- Validate and deploy the bundle
+- Run `00_setup.py` once
+- Upload sampled CSVs
+- Run `retailpulse_full_rebuild`
+- Collect outputs from `12_report_pack.py`
 
 ## 19. Future Extensions
 Not yet implemented in the current submission-safe scope:
 - MLflow experiment tracking
 - Databricks SQL or AI/BI dashboard
-- synthetic `product_price_map` with `estimated_sales_amount`
-- second supervised model such as RandomForest
-- richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
+- Synthetic `product_price_map` with `estimated_sales_amount`
+- Second supervised model such as RandomForest
+- Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
 - RDD-style Hadoop demo on non-serverless compute

@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Streaming Replay
 # MAGIC
-# MAGIC Databricks Free Edition serverless only supports `Trigger.AvailableNow`, so this notebook creates a held-out replay slice, writes small CSV batches, and streams them into `stream_order_slot_metrics`.
+# MAGIC Databricks Free Edition serverless only supports `Trigger.AvailableNow`, so this notebook creates a held-out replay slice, writes multiple CSV files, and streams them into `stream_order_slot_metrics`.
 
 # COMMAND ----------
 from pyspark.sql import Window, functions as F
@@ -40,6 +40,7 @@ checkpoint_root = volume_path(checkpoint_volume, "stream_order_slot_metrics")
 dbutils.fs.rm(replay_root, True)
 dbutils.fs.rm(checkpoint_root, True)
 spark.sql(f"DROP TABLE IF EXISTS {qname('stream_order_slot_metrics')}")
+spark.sql(f"DROP TABLE IF EXISTS {qname('report_stream_validation')}")
 
 window_spec = Window.orderBy("order_id")
 held_out_orders = (
@@ -48,21 +49,23 @@ held_out_orders = (
     .withColumn("batch_id", (F.pmod(F.col("row_num") - 1, F.lit(batch_count)) + 1).cast("int"))
 )
 
+assert held_out_orders.count() > 0, "No held-out orders were available for the replay stream."
+
 for batch_id in range(1, batch_count + 1):
-    batch_path = f"{replay_root}/batch_{batch_id:02d}"
     (
         held_out_orders.filter(F.col("batch_id") == batch_id)
         .drop("row_num", "batch_id")
         .coalesce(1)
-        .write.mode("overwrite")
+        .write.mode("append")
         .option("header", True)
-        .csv(batch_path)
+        .csv(replay_root)
     )
 
 replay_schema = held_out_orders.drop("row_num", "batch_id").schema
 stream_input = (
     spark.readStream.schema(replay_schema)
     .option("header", True)
+    .option("maxFilesPerTrigger", 1)
     .csv(replay_root)
 )
 
@@ -96,9 +99,38 @@ batch_validation = (
 
 stream_validation = spark.table(qname("stream_order_slot_metrics"))
 comparison = (
-    batch_validation.join(stream_validation, ["order_dow", "order_hour_of_day"], "inner")
+    batch_validation.join(stream_validation, ["order_dow", "order_hour_of_day"], "full")
+    .na.fill(
+        {
+            "batch_order_count": 0,
+            "stream_order_count": 0,
+            "batch_avg_basket_size": 0.0,
+            "stream_avg_basket_size": 0.0,
+            "batch_reordered_items": 0,
+            "stream_reordered_items": 0,
+        }
+    )
     .withColumn("count_matches", F.col("batch_order_count") == F.col("stream_order_count"))
+    .withColumn(
+        "avg_basket_matches",
+        F.abs(F.col("batch_avg_basket_size") - F.col("stream_avg_basket_size")) < F.lit(1e-9),
+    )
+    .withColumn(
+        "reordered_matches",
+        F.col("batch_reordered_items") == F.col("stream_reordered_items"),
+    )
 )
 
-display(comparison)
+(
+    comparison.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .saveAsTable(qname("report_stream_validation"))
+)
 
+mismatches = comparison.filter(
+    ~F.col("count_matches") | ~F.col("avg_basket_matches") | ~F.col("reordered_matches")
+).count()
+assert mismatches == 0, f"Streaming replay validation found {mismatches} mismatched order-slot aggregates."
+
+display(comparison.orderBy("order_dow", "order_hour_of_day"))

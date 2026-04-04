@@ -55,9 +55,36 @@ spark.sql(f"OPTIMIZE {qname('fact_orders')} ZORDER BY (user_id)")
 for query_name, query_sql in queries.items():
     timings.append((query_name, "after_optimize", time_query(query_sql)))
 
-display(spark.createDataFrame(timings, ["query_name", "run_stage", "seconds"]))
+timings_df = spark.createDataFrame(timings, ["query_name", "run_stage", "seconds"])
+(
+    timings_df.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .saveAsTable(qname("report_optimize_timings"))
+)
+
+optimize_summary = (
+    timings_df.groupBy("query_name")
+    .pivot("run_stage", ["before_optimize", "after_optimize"])
+    .agg(F.first("seconds"))
+    .withColumn("seconds_saved", F.col("before_optimize") - F.col("after_optimize"))
+    .withColumn(
+        "speedup_ratio",
+        F.when(F.col("after_optimize") > 0, F.col("before_optimize") / F.col("after_optimize"))
+        .otherwise(F.lit(None)),
+    )
+)
+
+(
+    optimize_summary.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .saveAsTable(qname("report_optimize_summary"))
+)
+
+display(timings_df)
+display(optimize_summary)
 
 # COMMAND ----------
 # MAGIC %md
 # MAGIC Inspect the Databricks query profile for the two benchmark queries above to capture submission evidence. Serverless notebooks do not expose the Spark UI.
-

@@ -1,13 +1,23 @@
 # RetailPulse: Grocery Order Analytics & Recommendation on Databricks
 
-RetailPulse is a GitHub-ready Databricks Free Edition project for grocery order analytics and recommendation. It uses the Instacart dataset to build a bronze, silver, and gold Delta pipeline, a star-schema analytics layer, association rules, clustering, supervised models, and a serverless-safe streaming replay.
+RetailPulse is a GitHub-ready Databricks Free Edition project for grocery order analytics and recommendation. It uses the Instacart dataset to build a bronze, silver, and gold Delta pipeline, a star-schema analytics layer, serverless-safe association rules, clustering, supervised models, and a replay-style streaming demo.
 
 The repo is organized so the project can be reviewed in Git, rebuilt from scratch, deployed with Databricks Asset Bundles, and run manually from GitHub Actions without wasting Free Edition quota.
+
+## Validated Run Snapshot
+- Latest validated end-to-end Databricks run: April 3, 2026
+- Workspace target: Databricks Free Edition serverless
+- End-to-end status: `SUCCESS`
+- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/320947603989925`
+- Deterministic sample size:
+  - `341,974` sampled orders
+  - `3,267,191` sampled prior order rows
+  - `137,847` sampled train order rows
 
 ## Project Snapshot
 - Dataset: Instacart order history, sampled deterministically at 10% of users
 - Platform target: Databricks Free Edition, serverless-only
-- Core outputs: Delta tables, OLAP queries, recommendation rules, user segments, classifier/regression metrics, replay-stream validation
+- Core outputs: Delta tables, OLAP queries, association rules, user segments, exploratory classifier/regression metrics, replay-stream validation
 - Canonical notebook format: Databricks source notebooks in `.py`
 - Convenience notebook format: generated `.ipynb` copies in `notebooks_ipynb/`
 
@@ -15,10 +25,10 @@ The repo is organized so the project can be reviewed in Git, rebuilt from scratc
 - A bronze, silver, and gold Delta pipeline over sampled grocery-order data
 - A star schema centered on `fact_order_items` and `fact_orders`
 - OLAP analysis with `CUBE` and `ROLLUP`
-- Market basket recommendations using FP-growth
+- Serverless-safe pairwise association-rule mining for product recommendations
 - Customer segmentation using KMeans
-- A decision-tree classifier for power-user prediction
-- A linear-regression model for basket-size prediction
+- An exploratory decision-tree classifier for power-user prediction
+- An exploratory linear-regression model for basket-size prediction
 - A file-based replay stream using `Trigger.AvailableNow`
 - Optimize and benchmark evidence using `OPTIMIZE` and `ZORDER BY`
 
@@ -34,13 +44,61 @@ This keeps the submission honest and aligned with the real dataset instead of in
 Local sample builder -> Raw CSV upload -> Bronze Delta tables
 Bronze -> Silver cleansed/enriched tables
 Silver -> Gold dimensions, facts, and marts
-Gold -> OLAP, FP-growth, KMeans, classifier, regression
+Gold -> OLAP, pairwise association rules, KMeans, classifier, regression
 Gold held-out slice -> Replay batches -> AvailableNow streaming aggregate
 ```
 
 Assets:
-- [retailpulse_medallion.mmd](c:\D Drive\Projects\6th Sem\RetailPulse\assets\retailpulse_medallion.mmd)
-- [retailpulse_star_schema.mmd](c:\D Drive\Projects\6th Sem\RetailPulse\assets\retailpulse_star_schema.mmd)
+- [retailpulse_medallion.mmd](assets/retailpulse_medallion.mmd)
+- [retailpulse_star_schema.mmd](assets/retailpulse_star_schema.mmd)
+
+## Current Results Snapshot
+
+### Key table outputs
+| Table | Rows |
+| --- | ---: |
+| `bronze_orders` | 341,974 |
+| `silver_order_items` | 3,405,038 |
+| `fact_order_items` | 3,405,038 |
+| `fact_orders` | 334,438 |
+| `mart_association_rules` | 49 |
+| `stream_order_slot_metrics` | 158 |
+
+### Exploratory model metrics
+| Metric | Value |
+| --- | ---: |
+| Decision-tree accuracy | 0.9136 |
+| Decision-tree AUC | 0.8813 |
+| Majority baseline accuracy | 0.7445 |
+| Linear-regression R² | 0.5580 |
+| Linear-regression RMSE | 5.0945 |
+| Mean baseline RMSE | 7.6627 |
+
+These supervised results are useful for demo discussion, but they should be presented as exploratory rather than rigorous final predictive evidence. The current feature construction still needs a stricter leakage-safe redesign before final submission-grade claims.
+
+### Recommendation example
+- Seed product: `Organic Raspberries`
+- Recommended consequent: `Bag of Organic Bananas` with confidence `0.3005` and lift `2.4723`
+- Recommended consequent: `Organic Strawberries` with confidence `0.2384` and lift `2.8052`
+
+### Segment summary
+- Frequent loyal shoppers: `33.28` average orders, `9.20` average basket size, `65.21%` reorder rate
+- Light occasional shoppers: `7.54` average orders, `6.63` average basket size, `35.94%` reorder rate
+- Large-basket stock-up shoppers: `10.10` average orders, `17.12` average basket size, `44.02%` reorder rate
+
+### Streaming and optimization
+- Streaming replay validation checked `158` order-slot aggregates with `0` mismatches
+- `OPTIMIZE` completed successfully, but the measured benchmark queries were slower on this small sample; the repo documents that outcome honestly rather than claiming an improvement
+
+## Showcase Docs
+- [Showcase Summary](Docs/showcase-summary.md)
+- [Demo Script](Docs/demo-script.md)
+- [Evidence Pack](Docs/evidence-pack.md)
+- [Executive Summary](Docs/Executive%20Summary.md)
+- [14-Day Plan](Docs/Grocery%20Sales%20Analytics%20%26%20Recommendation%20on%20Databricks_%2014-Day%20Plan.md)
+- [Ultimate 2-Week Guide](Docs/Ultimate%202-Week%20Databricks%20Project_%20Data%20Mining%20%26%20Warehousing.md)
+- [Rebuild From Scratch](Docs/rebuild-from-scratch.md)
+- [Original Blueprint](Docs/RetailPulse%20PLAN.md)
 
 ## Repository Layout
 - `notebooks/`: canonical Databricks source notebooks
@@ -48,7 +106,7 @@ Assets:
 - `scripts/`: local helper scripts and notebook export tooling
 - `tests/`: local unit tests for Python utilities
 - `resources/`: Databricks Asset Bundle resource definitions
-- `Docs/`: report-facing and rebuild documentation
+- `Docs/`: report-facing, rebuild, and showcase documentation
 - `.github/workflows/`: CI and manual Databricks automation
 
 ## Automation Files
@@ -63,15 +121,15 @@ The canonical notebook source lives in `notebooks/*.py`.
 Why `.py` instead of `.ipynb`:
 - Databricks officially supports source notebooks and Jupyter notebooks for import/export
 - `.py` source notebooks diff cleanly in Git
-- code review is substantially easier in plain text
-- bundle-based deployment works naturally with source notebooks
-- deterministic generation of `.ipynb` is easier than deterministic maintenance of hand-edited notebook JSON
+- Code review is substantially easier in plain text
+- Bundle-based deployment works naturally with source notebooks
+- Deterministic generation of `.ipynb` is easier than deterministic maintenance of hand-edited notebook JSON
 
 The rule for this repo is:
-- edit only `notebooks/*.py`
-- regenerate `notebooks_ipynb/*.ipynb` after notebook changes
-- commit both formats
-- treat `.ipynb` as a convenience mirror, not the source of truth
+- Edit only `notebooks/*.py`
+- Regenerate `notebooks_ipynb/*.ipynb` after notebook changes
+- Commit both formats
+- Treat `.ipynb` as a convenience mirror, not the source of truth
 
 ## Quick Start
 ### 0. Install Databricks CLI
@@ -138,17 +196,17 @@ databricks bundle run retailpulse_full_rebuild -t dev
 ```
 
 ## Databricks Automation
-This repo is set up for two automation levels:
+This repo is set up for two automation levels.
 
 ### Local automation
-- use Databricks CLI for authentication
-- validate and deploy with Databricks Asset Bundles
-- run the end-to-end job locally when you want a full rebuild
+- Use Databricks CLI for authentication
+- Validate and deploy with Databricks Asset Bundles
+- Run the end-to-end job locally when you want a full rebuild
 
 ### GitHub automation
 - CI workflow runs local validation on push and pull request
 - Databricks workflow is `workflow_dispatch` only
-- manual dispatch validates, deploys, and runs the full job
+- Manual dispatch validates, deploys, and runs the full job
 - GitHub secrets required:
   - `DATABRICKS_HOST`
   - `DATABRICKS_TOKEN`
@@ -157,22 +215,22 @@ This is deliberate. Databricks Free Edition is quota-limited and should not auto
 
 ## What Is Automated And What Is Still Manual
 Automated:
-- workspace-authenticated bundle validation
-- bundle deployment
-- sequential notebook execution through `retailpulse_full_rebuild`
+- Workspace-authenticated bundle validation
+- Bundle deployment
+- Sequential notebook execution through `retailpulse_full_rebuild`
 - GitHub-triggered manual Databricks runs
 
 Still manual by design:
-- downloading the raw Instacart dataset
-- building the deterministic 10% local sample
-- uploading sampled CSV files into the raw Unity Catalog volume
+- Downloading the raw Instacart dataset
+- Building the deterministic 10% local sample
+- Uploading sampled CSV files into the raw Unity Catalog volume
 
 The last point is intentional. The project explicitly avoids pulling Kaggle data from notebooks, and `01_sample_and_upload.py` is a validation checkpoint rather than a downloader.
 
 ## Core Commands
 ### Local validation
 ```powershell
-python -m unittest -q tests.test_sample_instacart tests.test_split_stream_replay_batches
+python -m unittest -q tests.test_sample_instacart tests.test_split_stream_replay_batches tests.test_export_databricks_source_to_ipynb
 python -m py_compile scripts\sample_instacart.py scripts\split_stream_replay_batches.py scripts\export_databricks_source_to_ipynb.py
 python scripts/export_databricks_source_to_ipynb.py --check
 databricks bundle validate -t dev
@@ -200,9 +258,9 @@ databricks bundle run retailpulse_full_rebuild -t dev
 ```
 
 Or, from GitHub Actions:
-- run `.github/workflows/run-databricks-bundle.yml`
-- provide the `dev` target
-- let the workflow validate, deploy, and run the bundle job
+- Run `.github/workflows/run-databricks-bundle.yml`
+- Provide the `dev` target
+- Let the workflow validate, deploy, and run the bundle job
 
 ## Notebook Execution Order
 1. `notebooks/00_setup.py`
@@ -223,33 +281,26 @@ Or, from GitHub Actions:
 - Bronze counts match uploaded CSV counts
 - `fact_order_items` has no null identifiers and `reordered` stays within `0/1`
 - `fact_orders.basket_size` matches grouped line counts from `fact_order_items`
-- FP-growth produces non-trivial rules and at least three recommendations for a seed basket
+- Association-rule mining produces non-trivial rules and at least three recommendations for a seed basket
 - KMeans returns centroid summaries for `k in {3,4,5}`
-- The classifier beats the majority baseline
-- The regression beats the mean-basket baseline or is documented as exploratory
+- The current exploratory classifier evaluation beats the majority baseline
+- The current exploratory regression evaluation beats the mean-basket baseline and is presented as exploratory
 - Replay stream output matches the equivalent batch aggregate
 - Bundle validation passes without manual notebook path edits
 
 ## Screenshots And Report Artifacts
 Use these in the GitHub repo and final report:
-- architecture diagram
-- star schema diagram
+- Architecture diagram
+- Star schema diagram
 - OLAP query outputs
-- top association rules
-- cluster profiles
-- classifier metrics
-- regression metrics
-- replay-stream validation
-- optimize timing comparison
+- Top association rules
+- Cluster profiles
+- Classifier metrics
+- Regression metrics
+- Replay-stream validation
+- Optimize timing comparison
 
-You can later add screenshots to a folder such as `assets/screenshots/` and link them from this README.
-
-## Detailed Documentation
-- [Executive Summary](c:\D Drive\Projects\6th Sem\RetailPulse\Docs\Executive%20Summary.md)
-- [14-Day Plan](c:\D Drive\Projects\6th Sem\RetailPulse\Docs\Grocery%20Sales%20Analytics%20%26%20Recommendation%20on%20Databricks_%2014-Day%20Plan.md)
-- [Ultimate 2-Week Guide](c:\D Drive\Projects\6th Sem\RetailPulse\Docs\Ultimate%202-Week%20Databricks%20Project_%20Data%20Mining%20%26%20Warehousing.md)
-- [Rebuild From Scratch](c:\D Drive\Projects\6th Sem\RetailPulse\Docs\rebuild-from-scratch.md)
-- [Original Blueprint](c:\D Drive\Projects\6th Sem\RetailPulse\Docs\RetailPulse%20PLAN.md)
+The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. Replace the labeled placeholders in that folder with real screenshots from the validated Databricks run before final submission.
 
 ## Troubleshooting
 ### Why are the notebooks in `.py` instead of `.ipynb`?
@@ -258,8 +309,11 @@ Because `.py` is the reviewable source of truth in Git. The repo still provides 
 ### Can I run everything automatically in Databricks?
 Yes, once the sampled raw CSVs are uploaded. The Databricks Asset Bundle defines a single sequential multi-task job, and GitHub Actions can validate, deploy, and run it manually through `workflow_dispatch`.
 
-### Will GitHub automatically run Databricks on every push?
-No. The Databricks run workflow is manual by design to avoid Free Edition quota waste.
+### Why does the recommendation notebook not use FP-growth?
+The final Databricks Free Edition serverless implementation uses pairwise association-rule mining instead. In this workspace, Spark Connect serverless was not a reliable path for `FPGrowth`, so the recommendation step was adapted to a submission-safe implementation that still writes `mart_association_rules` and supports seed-product recommendations.
+
+### Why did the optimize benchmark get slower?
+Because the dataset sample is small. The benchmark was still run and recorded honestly, but `OPTIMIZE` plus `ZORDER BY` did not improve those two measured queries on this specific sample size.
 
 ### Can I use MLflow or dashboards later?
 Yes. They are listed under future work because the current repo focuses on the core submission-safe scope.

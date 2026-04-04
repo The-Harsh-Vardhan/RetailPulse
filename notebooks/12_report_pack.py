@@ -31,21 +31,48 @@ table_counts = [
 display(spark.createDataFrame(table_counts, ["table_name", "row_count"]))
 
 # COMMAND ----------
-display(spark.table(qname("report_classifier_metrics")))
-display(spark.table(qname("report_regression_metrics")))
-display(spark.table(qname("report_cluster_profiles")))
-display(
+display(spark.table(qname("report_olap_cube")).orderBy("department_id", "order_dow"))
+display(spark.table(qname("report_olap_rollup")).orderBy("order_dow", "order_hour_of_day"))
+display(spark.table(qname("report_olap_basket")).orderBy("daypart", "department_id"))
+display(spark.table(qname("report_olap_validation")).orderBy("department_id", "order_dow"))
+
+# COMMAND ----------
+dim_product = spark.table(qname("dim_product"))
+top_rules = (
     spark.table(qname("mart_association_rules"))
+    .join(
+        dim_product.select(
+            F.col("product_id").alias("antecedent_product_id"),
+            F.col("product_name").alias("antecedent_product_name"),
+        ),
+        "antecedent_product_id",
+        "left",
+    )
+    .join(
+        dim_product.select(
+            F.col("product_id").alias("consequent_product_id"),
+            F.col("product_name").alias("consequent_product_name"),
+        ),
+        "consequent_product_id",
+        "left",
+    )
     .orderBy(F.desc("lift"), F.desc("confidence"))
     .limit(10)
 )
+
+display(spark.table(qname("report_classifier_metrics")))
+display(spark.table(qname("report_regression_metrics")))
+display(spark.table(qname("report_cluster_profiles")))
+display(spark.table(qname("report_stream_validation")).orderBy("order_dow", "order_hour_of_day"))
+display(spark.table(qname("report_optimize_summary")).orderBy("query_name"))
+display(top_rules)
 
 # COMMAND ----------
 report_outline = [
     ("1", "Problem statement and dataset caveats"),
     ("2", "Medallion architecture and star schema"),
     ("3", "Bronze, silver, and gold row-count validation"),
-    ("4", "OLAP findings with CUBE and ROLLUP"),
+    ("4", "OLAP findings with CUBE and ROLLUP plus persisted report tables"),
     ("5", "Top association rules and recommendation example"),
     ("6", "Cluster profiles and business interpretation"),
     ("7", "Classifier and regression metrics versus baselines"),

@@ -2,8 +2,11 @@
 
 ## Summary
 - Build a submission-safe Databricks project around grocery order behavior, not raw revenue.
-- Keep core scope to: sampled Instacart data, bronze/silver/gold Delta pipeline, star schema, OLAP, FP-growth recommendations, KMeans user segments, one classifier, one regression model, and a simple streaming replay demo.
+- Keep core scope to: sampled Instacart data, bronze/silver/gold Delta pipeline, star schema, OLAP, association-rule recommendations, KMeans user segments, one classifier, one regression model, and a simple streaming replay demo.
 - Correct the current docs before implementation: Instacart does not include product prices or absolute calendar dates, and Databricks Free Edition is serverless-only. Replace `sales_amount` and month/year analysis with item-count, basket-size, reorder-rate, `order_dow`, `order_hour_of_day`, and `days_since_prior_order`. Add synthetic pricing only if your evaluator explicitly requires “sales”.
+
+## Final Implementation Note
+The original blueprint targeted FP-growth for the recommendation stage. The final Databricks Free Edition implementation uses pairwise association-rule mining instead because that was the stable submission-safe path on the target Spark Connect serverless workspace.
 
 ## Interfaces And Artifacts
 - Use a deterministic 10% user sample as the working dataset: keep rows where `pmod(user_id, 10) = 0` in `orders`, then filter order-product files to those `order_id`s. Download locally and upload to Databricks; do not fetch Kaggle from notebooks.
@@ -20,7 +23,7 @@
 3. Day 3: Build silver tables by unioning prior/train order-items, enriching products with aisles/departments, and validating null/duplicate behavior.
 4. Day 4: Build `dim_*`, `fact_order_items`, and `fact_orders`; use `dim_order_slot` instead of `dim_date`; keep measures to item count, basket size, and reorder metrics.
 5. Day 5: Implement OLAP queries with `CUBE(department_id, order_dow)`, `ROLLUP(order_dow, order_hour_of_day)`, and basket-size analysis by department/day-part; capture charts/screenshots.
-6. Day 6: Run FP-growth on per-order product baskets, persist `mart_association_rules`, and add a notebook cell that returns top consequent products for a seed basket.
+6. Day 6: Build association rules on per-order product baskets, persist `mart_association_rules`, and add a notebook cell that returns top consequent products for a seed basket.
 7. Day 7: Create `mart_user_features` and cluster users with KMeans; restrict `k` search to `3`, `4`, `5`; keep the best silhouette plus interpretable segments.
 8. Day 8: Train a `DecisionTreeClassifier` on user-level features with `power_user` defined as top-quartile `total_orders`; compare against majority baseline and save feature importance.
 9. Day 9: Train a `LinearRegression` model to predict `basket_size` from order context and prior-user behavior; use this as the predictive analytics deliverable.
@@ -36,7 +39,7 @@
 - `fact_order_items` has no null `order_id`, `user_id`, `product_id`, or `department_id`; `reordered` is only `0/1`.
 - `fact_orders.basket_size` matches grouped line counts from `fact_order_items` on a sampled order set.
 - OLAP output includes subtotal and grand-total rows for both `CUBE` and `ROLLUP`, and manual spot checks match fact aggregates.
-- FP-growth produces at least 10 non-trivial rules with sensible confidence/lift; the recommendation cell returns 3 suggestions for a sample basket.
+- Association-rule mining produces at least 10 non-trivial rules with sensible confidence and lift; the recommendation cell returns suggestions for a sample basket.
 - KMeans output includes centroid values and one short business interpretation per segment.
 - The decision tree beats majority-class baseline; the regression beats mean-basket baseline or is explicitly documented as exploratory if it does not.
 - Streaming replay output matches an equivalent batch aggregate over the same held-out files.
@@ -46,4 +49,4 @@
 - Default project title becomes `RetailPulse: Grocery Order Analytics & Recommendation on Databricks`; only use “sales” wording if you intentionally add synthetic pricing and label it estimated.
 - `dim_order_slot` is the time dimension. Do not invent month/year facts from this dataset.
 - Keep notebook logic linear and bounded: one responsibility per notebook, small transformations, explicit validation after each stage, minimal UDFs, and no hidden state.
-- As of **March 27, 2026**, Databricks documents Free Edition as serverless-only and quota-limited, and as of **January 24, 2026**, Databricks documents that serverless does not support RDD APIs, has limited DBFS access, and only supports `Trigger.AvailableNow` for Structured Streaming: [Free Edition limitations](https://docs.databricks.com/aws/en/getting-started/free-edition-limitations), [Serverless compute limitations](https://docs.databricks.com/en/compute/serverless/limitations.html).
+- As of March 27, 2026, Databricks documents Free Edition as serverless-only and quota-limited, and as of January 24, 2026, Databricks documents that serverless does not support RDD APIs, has limited DBFS access, and only supports `Trigger.AvailableNow` for Structured Streaming.

@@ -63,12 +63,6 @@ ORDER BY dos.daypart, avg_basket_size DESC
 cube_df = spark.sql(cube_query)
 rollup_df = spark.sql(rollup_query)
 basket_df = spark.sql(basket_query)
-
-display(cube_df)
-display(rollup_df)
-display(basket_df)
-
-# COMMAND ----------
 manual_check = (
     spark.table(qname("fact_order_items"))
     .groupBy("department_id", "order_dow")
@@ -81,5 +75,20 @@ comparison = (
     .withColumn("matches", F.col("total_items") == F.col("manual_total_items"))
 )
 
-display(comparison)
+for table_name, frame in {
+    "report_olap_cube": cube_df,
+    "report_olap_rollup": rollup_df,
+    "report_olap_basket": basket_df,
+    "report_olap_validation": comparison,
+}.items():
+    (
+        frame.write.format("delta")
+        .mode("overwrite")
+        .option("overwriteSchema", "true")
+        .saveAsTable(qname(table_name))
+    )
 
+display(cube_df)
+display(rollup_df)
+display(basket_df)
+display(comparison)
