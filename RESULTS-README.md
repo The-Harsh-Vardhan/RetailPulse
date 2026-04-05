@@ -4,10 +4,16 @@
   <img src="assets/brand/retailpulse_logo.png" alt="RetailPulse logo" width="180">
 </p>
 
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/Project%20Story-README-1f6feb?style=flat-square" alt="Project Story"></a>
+  <a href="RESULTS-README.md"><img src="https://img.shields.io/badge/Study%20Results-RESULTS--README-0e8a16?style=flat-square" alt="Study Results"></a>
+  <a href="HOW%20TO%20USE.md"><img src="https://img.shields.io/badge/How%20To%20Use-Workflow%20Guide-f97316?style=flat-square" alt="How To Use"></a>
+</p>
+
 This is the technical showcase for the validated RetailPulse implementation on Databricks using the Instacart dataset.
 
 - Main landing page: [README.md](README.md)
-- Operator and rerun guide: [HOW_TO_USE_README.md](HOW_TO_USE_README.md)
+- Operator and rerun guide: [HOW TO USE.md](HOW%20TO%20USE.md)
 
 ## Study Scope
 
@@ -267,6 +273,6 @@ These outputs remain in the repo because they are informative, but they are not 
 ## Where To Go Next
 
 - Project front door: [README.md](README.md)
-- Operator guide: [HOW_TO_USE_README.md](HOW_TO_USE_README.md)
+- Operator guide: [HOW TO USE.md](HOW%20TO%20USE.md)
 - Deep showcase doc: [Docs/showcase-summary.md](Docs/showcase-summary.md)
 - Evidence catalog: [Docs/evidence-pack.md](Docs/evidence-pack.md)

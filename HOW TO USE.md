@@ -4,10 +4,16 @@
   <img src="assets/brand/retailpulse_logo.png" alt="RetailPulse logo" width="180">
 </p>
 
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/Project%20Story-README-1f6feb?style=flat-square" alt="Project Story"></a>
+  <a href="RESULTS-README.md"><img src="https://img.shields.io/badge/Study%20Results-RESULTS--README-0e8a16?style=flat-square" alt="Study Results"></a>
+  <a href="HOW%20TO%20USE.md"><img src="https://img.shields.io/badge/How%20To%20Use-Workflow%20Guide-f97316?style=flat-square" alt="How To Use"></a>
+</p>
+
 This guide explains how to rerun the current RetailPulse workflow, how to adapt it to a new dataset today, and what the planned self-service future flow looks like.
 
 - Main project page: [README.md](README.md)
-- Technical study and outputs: [RESULTS_README.md](RESULTS_README.md)
+- Technical study and outputs: [RESULTS-README.md](RESULTS-README.md)
 
 ## What Works Today
 

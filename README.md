@@ -6,12 +6,26 @@
 
 <p align="center"><strong>Retail analytics, recommendation, and dashboarding on Databricks.</strong></p>
 
+<p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/Project%20Story-README-1f6feb?style=for-the-badge" alt="Project Story"></a>
+  <a href="RESULTS-README.md"><img src="https://img.shields.io/badge/Study%20Results-RESULTS--README-0e8a16?style=for-the-badge" alt="Study Results"></a>
+  <a href="HOW%20TO%20USE.md"><img src="https://img.shields.io/badge/How%20To%20Use-Workflow%20Guide-f97316?style=for-the-badge" alt="How To Use"></a>
+</p>
+
 RetailPulse is a Databricks-first retail analytics project built around a validated Instacart implementation. It takes grocery order history through a bronze, silver, and gold Delta pipeline, persists OLAP and report tables, surfaces cross-sell recommendations and customer segments, validates a replay-style streaming flow, and publishes a five-page AI/BI dashboard for review.
 
 This repository is now packaged for GitHub in three layers:
 - [README.md](README.md): the project story and journey from idea to implementation
-- [RESULTS_README.md](RESULTS_README.md): the Databricks study, visuals, and validated results
-- [HOW_TO_USE_README.md](HOW_TO_USE_README.md): the operator guide for rerunning the workflow and adapting it to a new dataset
+- [RESULTS-README.md](RESULTS-README.md): the Databricks study, visuals, and validated results
+- [HOW TO USE.md](HOW%20TO%20USE.md): the operator guide for rerunning the workflow and adapting it to a new dataset
+
+## Read This Like Tabs
+
+If you want the repo to feel like a three-tab GitHub package, use this path:
+
+1. [README.md](README.md) for the story
+2. [RESULTS-README.md](RESULTS-README.md) for the finished Databricks study and visuals
+3. [HOW TO USE.md](HOW%20TO%20USE.md) for the rerun and adaptation workflow
 
 ## Repository Docs
 
@@ -54,7 +68,7 @@ These root-level documents are meant to appear as first-class repository docs on
 | --- | --- |
 | <img src="assets/screenshots/08_stream_validation.png" alt="Streaming validation evidence" width="100%"> | <img src="assets/screenshots/14_classifier_feature_importance.png" alt="Classifier feature importance" width="100%"> |
 
-For the full evidence set, use [RESULTS_README.md](RESULTS_README.md) and [Docs/evidence-pack.md](Docs/evidence-pack.md).
+For the full evidence set, use [RESULTS-README.md](RESULTS-README.md) and [Docs/evidence-pack.md](Docs/evidence-pack.md).
 
 ## From Idea To Implementation
 
@@ -95,8 +109,8 @@ Assets:
 
 If you are reviewing the repo on GitHub, use this order:
 
-1. [RESULTS_README.md](RESULTS_README.md)
-2. [HOW_TO_USE_README.md](HOW_TO_USE_README.md)
+1. [RESULTS-README.md](RESULTS-README.md)
+2. [HOW TO USE.md](HOW%20TO%20USE.md)
 3. [Docs/showcase-summary.md](Docs/showcase-summary.md)
 4. [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
 5. [Docs/current-production-state.md](Docs/current-production-state.md)
@@ -128,12 +142,12 @@ That future system is planned next. It is not already implemented in this reposi
 ## Explore Further
 
 ### Project story and results
-- [RESULTS_README.md](RESULTS_README.md)
+- [RESULTS-README.md](RESULTS-README.md)
 - [Docs/showcase-summary.md](Docs/showcase-summary.md)
 - [Docs/boss-brief.md](Docs/boss-brief.md)
 
 ### Running and adapting the workflow
-- [HOW_TO_USE_README.md](HOW_TO_USE_README.md)
+- [HOW TO USE.md](HOW%20TO%20USE.md)
 - [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
 - [Docs/rebuild-from-scratch.md](Docs/rebuild-from-scratch.md)
 
