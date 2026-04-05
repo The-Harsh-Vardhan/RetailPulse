@@ -13,7 +13,7 @@ The repo is organized so the project can be reviewed in Git, rebuilt from scratc
 - Latest validated end-to-end Databricks run: April 5, 2026
 - Workspace target: Databricks Free Edition serverless
 - End-to-end status: `SUCCESS`
-- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/432431661287387`
+- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/631388168060027`
 - Published AI/BI dashboard: `RetailPulse Demo Dashboard`
 - Deterministic sample size:
   - `341,974` sampled orders
@@ -44,7 +44,7 @@ The repo is organized so the project can be reviewed in Git, rebuilt from scratc
 - An `Experimental Insights` lane with a linear-regression model for basket-size prediction
 - A file-based replay stream using `Trigger.AvailableNow`
 - Optimize and benchmark evidence using `OPTIMIZE` and `ZORDER BY`
-- A published AI/BI dashboard plus `12_report_pack.py` fallback for boss review and release evidence
+- A published AI/BI dashboard plus `12_report_pack.py` fallback for boss review and release evidence, both aligned to the five-page Dashboard V2 story
 
 ## Why This Project Does Not Use Raw Sales
 - Instacart does not include product prices or revenue
@@ -67,13 +67,22 @@ Assets:
 - [retailpulse_star_schema.mmd](assets/retailpulse_star_schema.mmd)
 
 ## GitHub Showcase
-| Successful run | Business overview |
+| Successful run | Executive overview |
 | --- | --- |
 | ![Successful Databricks run](assets/screenshots/01_run_success.png) | ![Business overview and OLAP outputs](assets/screenshots/03_olap_outputs.png) |
 
 | Recommendation proof | Execution evidence |
 | --- | --- |
 | ![Association rules and recommendation evidence](assets/screenshots/04_association_rules.png) | ![Streaming validation and execution evidence](assets/screenshots/08_stream_validation.png) |
+
+Dashboard V2 is organized into five reviewer-facing pages:
+1. `Executive Overview`
+2. `Order Behavior`
+3. `Recommendations And Segments`
+4. `Execution And Data Quality`
+5. `Experimental Insights And Performance`
+
+For GitHub review, lead with business overview, recommendation proof, and execution evidence. Keep exploratory metrics visible, but not as the hero story.
 
 More packaged evidence lives in `assets/screenshots/`, and the capture/source-of-truth rules live in [Docs/evidence-pack.md](Docs/evidence-pack.md).
 
@@ -333,23 +342,29 @@ Or, from GitHub Actions:
 Use these in the GitHub repo and final report:
 - Architecture diagram
 - Star schema diagram
-- OLAP query outputs
-- Top association rules
-- Cluster profiles
-- Classifier metrics
+- Executive overview and OLAP visuals
+- Order-behavior visuals such as orders by day and top products
+- Recommendation proof and seed-product recommendations
+- Cluster profiles and cluster-k selection evidence
+- Classifier metrics and classifier feature importance
 - Regression metrics
-- Replay-stream validation
+- Replay-stream validation and OLAP validation
 - Optimize timing comparison
 
-The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. The current PNGs were regenerated from the latest successful Databricks run and live warehouse results; if you later capture cleaner UI-native dashboard screenshots, keep the same filenames and replace them in place.
+The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. Dashboard V2 expands the evidence pack through `15_olap_validation.png`. If you later capture cleaner UI-native dashboard screenshots, keep the same filenames and replace them in place.
 
 For GitHub review, the top-priority files are:
 - `assets/screenshots/01_run_success.png`
 - `assets/screenshots/03_olap_outputs.png`
 - `assets/screenshots/04_association_rules.png`
 - `assets/screenshots/08_stream_validation.png`
+- `assets/screenshots/10_orders_by_day.png`
+- `assets/screenshots/12_seed_recommendations.png`
+- `assets/screenshots/13_cluster_k_scores.png`
+- `assets/screenshots/15_olap_validation.png`
 - `Docs/showcase-summary.md`
 - `Docs/RetailPulse Handbook.md`
+- `Docs/databricks-dashboard-spec.md`
 
 ## Troubleshooting
 ### Why are the notebooks in `.py` instead of `.ipynb`?
@@ -394,5 +409,3 @@ The following items were in the broader original vision but are not part of the 
 - Databricks Asset Bundles: https://docs.databricks.com/aws/en/dev-tools/bundles/
 - Databricks GitHub CI/CD guidance: https://docs.databricks.com/gcp/en/dev-tools/ci-cd/github
 - Databricks Free Edition limitations: https://docs.databricks.com/aws/en/getting-started/free-edition-limitations
-
-

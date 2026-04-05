@@ -10,7 +10,7 @@ This handbook is the single detailed explanation of what the project is, what it
 ### Implemented in repo
 - Databricks source notebooks in `notebooks/` with generated `.ipynb` mirrors in `notebooks_ipynb/`
 - Databricks Asset Bundle configuration for a sequential full rebuild job
-- Persisted report tables for OLAP, clustering, streaming validation, optimize evidence, and exploratory model metrics
+- Persisted report tables for OLAP, clustering, cluster-k selection, streaming validation, optimize evidence, and exploratory model metrics
 - SQL query pack for the published AI/BI dashboard
 - Boss-facing and release-facing docs under `Docs/`
 - Screenshot evidence pack under `assets/screenshots/`
@@ -18,7 +18,7 @@ This handbook is the single detailed explanation of what the project is, what it
 ### Verified in live Databricks workspace
 - Workspace host: `https://dbc-27b50dca-30e0.cloud.databricks.com/`
 - Job id: `61936309152043`
-- Latest successful run id: `432431661287387`
+- Latest successful run id: `631388168060027`
 - Latest successful run date: April 5, 2026
 - Published dashboard: `RetailPulse Demo Dashboard`
 - Dashboard id: `01f1305e8f1a115e8fb2b378bd4d8f99`
@@ -26,6 +26,7 @@ This handbook is the single detailed explanation of what the project is, what it
 
 ### Recommended next step
 - Keep the published Databricks AI/BI dashboard as the official live surface
+- Keep the richer five-page Dashboard V2 layout as the live review surface
 - Use the report pack notebook and screenshot set as fallback evidence
 - Keep classifier and regression outputs labeled as `Experimental Insights`
 
@@ -50,7 +51,7 @@ This handbook is the single detailed explanation of what the project is, what it
 - An `Experimental Insights` regression model for basket-size prediction
 - A replay-style streaming validation flow using `Trigger.AvailableNow`
 - `OPTIMIZE` and `ZORDER BY` benchmark evidence
-- A published AI/BI dashboard plus `12_report_pack.py` as the notebook fallback
+- A published AI/BI dashboard plus `12_report_pack.py` as the notebook fallback, both organized into a five-section Dashboard V2 story
 
 ## How The System Flows
 ```text
@@ -124,7 +125,8 @@ databricks bundle run retailpulse_full_rebuild -t dev
 ### 7. Run local validation before release work
 ```powershell
 python -m unittest -q tests.test_sample_instacart tests.test_split_stream_replay_batches tests.test_export_databricks_source_to_ipynb
-python -m py_compile scripts\sample_instacart.py scripts\split_stream_replay_batches.py scripts\export_databricks_source_to_ipynb.py
+$files = @((Get-ChildItem notebooks -Filter *.py).FullName) + @((Get-ChildItem scripts -Filter *.py).FullName) + @((Get-ChildItem tests -Filter *.py).FullName)
+python -m py_compile $files
 python scripts/export_databricks_source_to_ipynb.py --check
 databricks bundle validate -t dev
 ```
@@ -133,12 +135,16 @@ databricks bundle validate -t dev
 
 ### Dashboard-first path
 - Open `RetailPulse Demo Dashboard`
-- Use `Business Overview` for business-facing results
-- Use `Execution And Evidence` for correctness and operational proof
+- Use `Executive Overview` for the headline result and core table counts
+- Use `Order Behavior` for daypart, hourly, and product-level behavior
+- Use `Recommendations And Segments` for rules, seed recommendations, and cluster interpretation
+- Use `Execution And Data Quality` for validation and release-signoff evidence
+- Use `Experimental Insights And Performance` only for exploratory metrics and optimize evidence
 
 ### Notebook fallback path
 - Open `notebooks/12_report_pack.py`
 - Use it when the dashboard is unavailable or when a drill-down is easier in notebook form
+- The notebook mirrors the same five sections as Dashboard V2 so the story stays consistent
 
 ### Release evidence
 - Screenshot evidence: `assets/screenshots/`
@@ -148,10 +154,9 @@ databricks bundle validate -t dev
 
 ## How To Demo It
 1. Start with the published AI/BI dashboard, not raw notebooks.
-2. Show the business overview story first: counters, department demand, timing, basket behavior, recommendation rules, and customer segments.
-3. Move to the execution and evidence story second: stream validation, optimize comparison, and exploratory model metrics with disclaimer.
-4. Use `12_report_pack.py` only if a widget fails or a specific panel needs drill-down.
-5. Keep the core explanation disciplined:
+2. Walk the five-section story in order: Executive Overview, Order Behavior, Recommendations And Segments, Execution And Data Quality, then Experimental Insights And Performance.
+3. Use `12_report_pack.py` only if a widget fails or a specific panel needs drill-down.
+4. Keep the core explanation disciplined:
    - recommendation and segmentation are valid deliverables
    - streaming validation is a correctness story
    - optimize benchmark is documented honestly

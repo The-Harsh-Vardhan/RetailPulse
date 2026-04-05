@@ -6,7 +6,7 @@ This document is the fastest way to present the finished project. It captures th
 If someone opens this repository cold, the fastest clean path is:
 1. `README.md`
 2. this summary
-3. `assets/screenshots/`
+3. `assets/screenshots/` with Dashboard V2 hero images first
 4. `Docs/RetailPulse Handbook.md`
 5. `Docs/demo-script.md`
 
@@ -15,11 +15,18 @@ If the review is more operational than academic, then add:
 7. `Docs/release-checklist.md`
 8. `Docs/Next Step Priority Plan.md`
 
+## Dashboard V2 Page Map
+- `Executive Overview`: KPI counters, orders by day, department demand, timing pattern, and core table counts
+- `Order Behavior`: daypart basket patterns, average basket by day, average basket by hour, and top products
+- `Recommendations And Segments`: top rules, seed recommendations, segment profiles, segment sizes, and cluster k-selection
+- `Execution And Data Quality`: stream validation, OLAP validation, and release-signoff evidence
+- `Experimental Insights And Performance`: exploratory metrics, classifier feature importance, and optimize timings
+
 ## Validated Run
 - Validation date: April 5, 2026
 - Databricks target: Free Edition serverless
 - Final job status: `SUCCESS`
-- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/432431661287387`
+- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/631388168060027`
 
 ## Data Scope
 RetailPulse uses the Instacart public order-history dataset with a deterministic 10% user sample:
@@ -40,11 +47,15 @@ The project deliberately avoids raw sales or date claims because Instacart does 
 | `fact_order_items` | 3,405,038 |
 | `fact_orders` | 334,438 |
 | `mart_association_rules` | 49 |
-| `stream_order_slot_metrics` | 158 |
+| `report_cluster_profiles` | 3 |
 | `report_stream_validation` | 158 |
 | `report_optimize_summary` | 2 |
 
-## OLAP Highlights
+Dashboard V2 also uses:
+- `report_cluster_k_scores`
+- `report_classifier_feature_importance`
+
+## Executive Overview Highlights
 Top departments by item count:
 
 | Department | Item count | Average basket size |
@@ -86,7 +97,20 @@ KMeans produced three interpretable shopper segments:
 | Cluster 1 | 9,050 | 7.5448 | 6.6317 | 0.3594 | 18.5083 | Light occasional shoppers |
 | Cluster 2 | 5,130 | 10.1033 | 17.1178 | 0.4402 | 16.9798 | Large-basket stock-up shoppers |
 
-## Experimental Insights
+Dashboard V2 also surfaces the model-selection evidence for `k = 3, 4, 5` through `report_cluster_k_scores`.
+
+## Execution And Data Quality
+The streaming notebook uses `Trigger.AvailableNow` because Databricks Free Edition serverless does not support the broader continuous streaming options.
+
+Validated replay result:
+- `158` order-slot groups checked
+- `0` mismatches between stream output and equivalent batch aggregation
+
+The OLAP notebook also persists a validation table that compares grouped totals from the cube output against direct grouped totals from the fact table.
+
+This gives a correctness story for both streaming and OLAP instead of relying on visuals alone.
+
+## Experimental Insights And Performance
 | Model | Metric | Value |
 | --- | --- | ---: |
 | Decision tree | Accuracy | 0.9136 |
@@ -100,15 +124,7 @@ Interpretation:
 - In the current experimental evaluation, both models beat simple baselines.
 - These metrics are useful for boss review and technical discussion, but they are not release gates and do not drive automated decisions in the current internal pilot.
 - The feature construction still needs a stricter leakage-safe redesign before these models can be presented as rigorous final predictive evidence.
-
-## Streaming Replay Validation
-The streaming notebook uses `Trigger.AvailableNow` because Databricks Free Edition serverless does not support the broader continuous streaming options.
-
-Validated replay result:
-- `158` order-slot groups checked
-- `0` mismatches between stream output and equivalent batch aggregation
-
-This gives a clean correctness proof for the streaming demo rather than a visually impressive but unverified replay.
+- Dashboard V2 adds classifier feature-importance evidence so the exploratory page is more interpretable than a plain metric table.
 
 ## Optimization Benchmark
 The optimization notebook ran `OPTIMIZE` and `ZORDER BY` on the gold facts and persisted the benchmark summary.
@@ -122,24 +138,21 @@ This is an important honesty point for the demo: the optimization step completed
 
 ## What Makes The Project Showcaseable
 - It runs end to end on Databricks Free Edition serverless.
-- The live AI/BI dashboard is published and backed by the same report tables used by the notebook fallback.
-- It is GitHub-ready with clean notebook sources, generated `.ipynb` mirrors, bundle automation, CI, and rebuild documentation.
-- The repo now standardizes evidence through persisted report tables where available and a named screenshot pack for demo packaging.
+- The live AI/BI dashboard is published, and the repo plus workspace now share the same richer five-page Dashboard V2 story.
+- The dashboard is backed by the same report tables used by the notebook fallback.
+- It is GitHub-ready with clean notebook sources, generated `.ipynb` mirrors, bundle automation, CI, rebuild documentation, and a richer screenshot evidence set.
 - The project is explicit about dataset constraints and platform limitations instead of overclaiming.
 
 ## Recommended Demo Assets
 - Databricks run page showing overall success
-- `05_olap.py` output tables
-- `06_association_rules.py` rules and recommendation example
-- `07_clustering.py` segment table
-- `08_classifier.py` and `09_regression.py` metrics
-- `10_streaming_replay.py` validation table
-- `11_optimize.py` timing summary
+- Dashboard V2 `Executive Overview`
+- Dashboard V2 `Recommendations And Segments`
+- Dashboard V2 `Execution And Data Quality`
 - `12_report_pack.py` as the closing evidence notebook
 - `assets/screenshots/` for the packaged demo evidence set
 
 ## Recommended GitHub Highlights
-- Lead with the successful Databricks run screenshot and the business-overview dashboard screenshot.
-- Show recommendation proof and streaming validation before you show any exploratory model metrics.
+- Lead with the successful Databricks run screenshot and Dashboard V2 `Executive Overview`.
+- Show recommendation proof, top products, cluster k-selection, and streaming validation before you show any exploratory model metrics.
 - Keep classifier and regression evidence in the repo, but do not make them the hero assets.
 - Link reviewers to `Docs/RetailPulse Handbook.md` if they want the full operating model instead of just the outcome snapshot.

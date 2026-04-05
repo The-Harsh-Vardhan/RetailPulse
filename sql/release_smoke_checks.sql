@@ -19,14 +19,21 @@ WHERE table_catalog = current_catalog()
     'report_classifier_metrics',
     'report_regression_metrics',
     'report_cluster_profiles',
+    'report_cluster_k_scores',
+    'report_classifier_feature_importance',
     'report_stream_validation',
-    'report_optimize_summary'
+    'report_optimize_summary',
+    'report_optimize_timings'
   )
 ORDER BY table_name;
 
 -- 2. Required report tables are readable and non-empty.
 -- Pass condition: every row_count is greater than zero.
+SELECT 'report_classifier_feature_importance' AS table_name, COUNT(*) AS row_count FROM report_classifier_feature_importance
+UNION ALL
 SELECT 'report_classifier_metrics' AS table_name, COUNT(*) AS row_count FROM report_classifier_metrics
+UNION ALL
+SELECT 'report_cluster_k_scores' AS table_name, COUNT(*) AS row_count FROM report_cluster_k_scores
 UNION ALL
 SELECT 'report_cluster_profiles' AS table_name, COUNT(*) AS row_count FROM report_cluster_profiles
 UNION ALL
@@ -39,6 +46,8 @@ UNION ALL
 SELECT 'report_olap_validation' AS table_name, COUNT(*) AS row_count FROM report_olap_validation
 UNION ALL
 SELECT 'report_optimize_summary' AS table_name, COUNT(*) AS row_count FROM report_optimize_summary
+UNION ALL
+SELECT 'report_optimize_timings' AS table_name, COUNT(*) AS row_count FROM report_optimize_timings
 UNION ALL
 SELECT 'report_regression_metrics' AS table_name, COUNT(*) AS row_count FROM report_regression_metrics
 UNION ALL
@@ -60,9 +69,19 @@ SELECT
   SUM(CASE WHEN count_matches AND avg_basket_matches AND reordered_matches THEN 0 ELSE 1 END) AS mismatch_groups
 FROM report_stream_validation;
 
--- 5. Report-pack backing tables can be read directly.
+-- 5. OLAP validation is clean.
+-- Pass condition: mismatched_groups = 0 and max_item_gap = 0.
+SELECT
+  COUNT(*) AS checked_groups,
+  SUM(CASE WHEN matches THEN 0 ELSE 1 END) AS mismatched_groups,
+  MAX(ABS(total_items - manual_total_items)) AS max_item_gap
+FROM report_olap_validation;
+
+-- 6. Report-pack backing tables can be read directly.
 -- Pass condition: each query returns rows without error.
 SELECT * FROM report_classifier_metrics ORDER BY metric_name;
 SELECT * FROM report_regression_metrics ORDER BY metric_name;
+SELECT * FROM report_classifier_feature_importance ORDER BY importance DESC, feature_name;
 SELECT * FROM report_cluster_profiles ORDER BY avg_total_orders DESC;
+SELECT * FROM report_cluster_k_scores ORDER BY cluster_k;
 SELECT * FROM report_optimize_summary ORDER BY query_name;

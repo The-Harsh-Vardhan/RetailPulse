@@ -58,10 +58,13 @@ databricks bundle run retailpulse_full_rebuild -t dev
 
 ### 7. Rehearse the boss walkthrough
 Use this order:
-1. dashboard business overview
-2. dashboard execution and evidence page
-3. `12_report_pack.py` fallback
-4. known constraints and next milestone
+1. `Executive Overview`
+2. `Order Behavior`
+3. `Recommendations And Segments`
+4. `Execution And Data Quality`
+5. `Experimental Insights And Performance`
+6. `12_report_pack.py` fallback
+7. known constraints and next milestone
 
 ## Rollback
 ### Trigger rollback if any of these happen

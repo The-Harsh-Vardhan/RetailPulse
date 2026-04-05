@@ -14,7 +14,7 @@ The short answer is simple: do not spend the next cycle building more models. Re
 - Dashboard SQL, screenshot evidence pack, and notebook fallback
 
 ### Verified in live Databricks workspace
-- Latest successful run id: `432431661287387`
+- Latest successful run id: `631388168060027`
 - Job id: `61936309152043`
 - Published dashboard: `RetailPulse Demo Dashboard`
 - Warehouse id: `2300565af9f2288c`

@@ -15,7 +15,7 @@ This note explains the current RetailPulse visualization stack, how to improve i
 - Published AI/BI dashboard: `RetailPulse Demo Dashboard`
 - Dashboard id: `01f1305e8f1a115e8fb2b378bd4d8f99`
 - Warehouse id: `2300565af9f2288c`
-- Published revision: `2026-04-05T05:08:33.719Z`
+- Published revision: `2026-04-05T08:40:02.619Z`
 
 ### Recommended next step
 - Treat the Databricks AI/BI dashboard as the system of record for live presentation

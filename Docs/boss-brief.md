@@ -2,14 +2,15 @@
 
 ## What Is Live
 - A full bronze, silver, and gold Databricks pipeline over the sampled Instacart dataset
-- Persisted report tables for OLAP, recommendations, clustering, streaming validation, optimization, and the `Experimental Insights` models
+- Persisted report tables for OLAP, recommendations, clustering, cluster-k selection, streaming validation, optimization, and the `Experimental Insights` models
 - A published AI/BI dashboard: `RetailPulse Demo Dashboard`
 - A notebook fallback evidence hub: `12_report_pack.py`
 - A packaged screenshot set under `assets/screenshots/`
 
 ## What Is Validated
-- Latest successful rebuild run: `432431661287387`
+- Latest successful rebuild run: `631388168060027`
 - Job id: `61936309152043`
+- Published dashboard revision: `2026-04-05T08:40:02.619Z`
 - Streaming replay validation: `0` mismatches across `158` checked groups
 - Association rules: `49` non-trivial rules
 - Dashboard is published and backed by the same report tables used by the fallback notebook
@@ -27,10 +28,16 @@
 - `OPTIMIZE` completed correctly, but the benchmark was slower on this sample size
 
 ## Recommended Boss Walkthrough
-1. Business Overview page in the AI/BI dashboard
-2. Execution And Evidence page in the AI/BI dashboard
-3. `12_report_pack.py` as the fallback and evidence hub
-4. Known constraints, Experimental Insights boundary, and next milestone
+1. `Executive Overview` page in the AI/BI dashboard
+2. `Order Behavior` page in the AI/BI dashboard
+3. `Recommendations And Segments` page in the AI/BI dashboard
+4. `Execution And Data Quality` page in the AI/BI dashboard
+5. `Experimental Insights And Performance` page in the AI/BI dashboard
+6. `12_report_pack.py` as the fallback and evidence hub
+7. Known constraints, Experimental Insights boundary, and next milestone
+
+Presenter note:
+- Keep run `631388168060027` and published revision `2026-04-05T08:40:02.619Z` ready in case the review turns from visuals to release-state proof.
 
 ## Next Milestone
 - Keep this release stable as an internal pilot

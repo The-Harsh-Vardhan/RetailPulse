@@ -2,25 +2,20 @@
 # MAGIC %md
 # MAGIC # Report Pack
 # MAGIC
-# MAGIC This notebook assembles the final evidence tables used in the written report and demo.
+# MAGIC This notebook assembles the final evidence tables used in the written report, GitHub showcase, and Dashboard V2 fallback flow.
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## Notebook Dashboard Fallback
+# MAGIC ## Dashboard V2 Notebook Fallback
 # MAGIC
 # MAGIC Use the AI/BI dashboard as the primary live-demo surface.
 # MAGIC
-# MAGIC If the dashboard is unavailable or a panel needs drill-down, use this notebook as the fallback dashboard in this order:
-# MAGIC 1. table counts
-# MAGIC 2. OLAP cube
-# MAGIC 3. OLAP rollup
-# MAGIC 4. OLAP basket analysis
-# MAGIC 5. recommendation rules
-# MAGIC 6. cluster profiles
-# MAGIC 7. stream validation
-# MAGIC 8. optimize summary
-# MAGIC 9. classifier metrics
-# MAGIC 10. regression metrics
+# MAGIC If the dashboard is unavailable or a panel needs drill-down, use this notebook in the same five-section story:
+# MAGIC 1. Executive Overview
+# MAGIC 2. Order Behavior
+# MAGIC 3. Recommendations And Segments
+# MAGIC 4. Execution And Data Quality
+# MAGIC 5. Experimental Insights And Performance
 # MAGIC
 # MAGIC Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
 
@@ -39,25 +34,63 @@ def qname(name: str) -> str:
     return f"`{catalog}`.`{schema}`.`{name}`"
 
 
-table_counts = [
-    ("bronze_orders", spark.table(qname("bronze_orders")).count()),
-    ("silver_order_items", spark.table(qname("silver_order_items")).count()),
-    ("fact_order_items", spark.table(qname("fact_order_items")).count()),
-    ("fact_orders", spark.table(qname("fact_orders")).count()),
-    ("mart_association_rules", spark.table(qname("mart_association_rules")).count()),
-    ("stream_order_slot_metrics", spark.table(qname("stream_order_slot_metrics")).count()),
-]
-
-display(spark.createDataFrame(table_counts, ["table_name", "row_count"]))
-
-# COMMAND ----------
-display(spark.table(qname("report_olap_cube")).orderBy("department_id", "order_dow"))
-display(spark.table(qname("report_olap_rollup")).orderBy("order_dow", "order_hour_of_day"))
-display(spark.table(qname("report_olap_basket")).orderBy("daypart", "department_id"))
-display(spark.table(qname("report_olap_validation")).orderBy("department_id", "order_dow"))
-
-# COMMAND ----------
 dim_product = spark.table(qname("dim_product"))
+day_name = (
+    F.when(F.col("order_dow") == 0, "Sun")
+    .when(F.col("order_dow") == 1, "Mon")
+    .when(F.col("order_dow") == 2, "Tue")
+    .when(F.col("order_dow") == 3, "Wed")
+    .when(F.col("order_dow") == 4, "Thu")
+    .when(F.col("order_dow") == 5, "Fri")
+    .when(F.col("order_dow") == 6, "Sat")
+)
+
+table_counts = spark.createDataFrame(
+    [
+        ("bronze_orders", spark.table(qname("bronze_orders")).count()),
+        ("silver_order_items", spark.table(qname("silver_order_items")).count()),
+        ("fact_order_items", spark.table(qname("fact_order_items")).count()),
+        ("fact_orders", spark.table(qname("fact_orders")).count()),
+        ("mart_association_rules", spark.table(qname("mart_association_rules")).count()),
+        ("report_cluster_profiles", spark.table(qname("report_cluster_profiles")).count()),
+        ("report_cluster_k_scores", spark.table(qname("report_cluster_k_scores")).count()),
+        ("report_classifier_feature_importance", spark.table(qname("report_classifier_feature_importance")).count()),
+        ("report_stream_validation", spark.table(qname("report_stream_validation")).count()),
+        ("report_optimize_summary", spark.table(qname("report_optimize_summary")).count()),
+    ],
+    ["table_name", "row_count"],
+)
+
+orders_by_day = (
+    spark.table(qname("report_olap_rollup"))
+    .filter(F.col("order_dow").isNotNull() & F.col("order_hour_of_day").isNull())
+    .withColumn("order_day", day_name)
+    .select("order_day", "order_dow", "order_count", "avg_basket_size")
+    .orderBy("order_dow")
+)
+
+avg_basket_by_hour = (
+    spark.table(qname("fact_orders"))
+    .groupBy("order_hour_of_day")
+    .agg(
+        F.count("*").alias("order_count"),
+        F.avg("basket_size").alias("avg_basket_size"),
+    )
+    .orderBy("order_hour_of_day")
+)
+
+top_products = (
+    spark.table(qname("fact_order_items"))
+    .join(dim_product.select("product_id", "product_name"), "product_id", "left")
+    .groupBy("product_name")
+    .agg(
+        F.count("*").alias("items_seen"),
+        F.countDistinct("order_id").alias("distinct_orders"),
+    )
+    .orderBy(F.desc("items_seen"), F.desc("distinct_orders"), "product_name")
+    .limit(15)
+)
+
 top_rules = (
     spark.table(qname("mart_association_rules"))
     .join(
@@ -76,28 +109,134 @@ top_rules = (
         "consequent_product_id",
         "left",
     )
+    .select(
+        "antecedent_product_name",
+        "consequent_product_name",
+        "pair_order_count",
+        "support",
+        "confidence",
+        "lift",
+    )
+    .orderBy(F.desc("lift"), F.desc("confidence"))
+    .limit(15)
+)
+
+seed_product_name = "Organic Raspberries"
+seed_recommendations = (
+    spark.table(qname("mart_association_rules"))
+    .join(
+        dim_product.select(
+            F.col("product_id").alias("antecedent_product_id"),
+            F.col("product_name").alias("seed_product_name"),
+        ),
+        "antecedent_product_id",
+        "left",
+    )
+    .join(
+        dim_product.select(
+            F.col("product_id").alias("consequent_product_id"),
+            F.col("product_name").alias("recommended_product_name"),
+        ),
+        "consequent_product_id",
+        "left",
+    )
+    .filter(F.col("seed_product_name") == F.lit(seed_product_name))
+    .select(
+        "seed_product_name",
+        "recommended_product_name",
+        "pair_order_count",
+        "support",
+        "confidence",
+        "lift",
+    )
     .orderBy(F.desc("lift"), F.desc("confidence"))
     .limit(10)
 )
 
+cluster_profiles = (
+    spark.table(qname("report_cluster_profiles"))
+    .withColumn(
+        "segment_name",
+        F.when((F.col("avg_total_orders") >= 20) & (F.col("avg_reordered_item_rate") >= 0.55), "Frequent loyal shoppers")
+        .when(F.col("avg_basket_size") >= 14, "Large-basket stock-up shoppers")
+        .otherwise("Light occasional shoppers"),
+    )
+    .orderBy(F.desc("avg_total_orders"))
+)
+
+segment_sizes = cluster_profiles.select("cluster_id", "segment_name", "users_in_cluster").orderBy(
+    F.desc("users_in_cluster"), "cluster_id"
+)
+
+olap_validation_summary = (
+    spark.table(qname("report_olap_validation"))
+    .agg(
+        F.count("*").alias("checked_groups"),
+        F.sum(F.when(F.col("matches"), F.lit(1)).otherwise(F.lit(0))).alias("matched_groups"),
+        F.sum(F.when(F.col("matches"), F.lit(0)).otherwise(F.lit(1))).alias("mismatched_groups"),
+        F.max(F.abs(F.col("total_items") - F.col("manual_total_items"))).alias("max_item_gap"),
+    )
+)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 1. Executive Overview
+
+# COMMAND ----------
+display(table_counts)
+display(orders_by_day)
+display(spark.table(qname("report_olap_cube")).orderBy("department_id", "order_dow"))
+display(spark.table(qname("report_olap_rollup")).orderBy("order_dow", "order_hour_of_day"))
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 2. Order Behavior
+
+# COMMAND ----------
+display(spark.table(qname("report_olap_basket")).orderBy("daypart", "department_id"))
+display(avg_basket_by_hour)
+display(top_products)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 3. Recommendations And Segments
+
+# COMMAND ----------
+display(top_rules)
+display(seed_recommendations)
+display(cluster_profiles)
+display(segment_sizes)
+display(spark.table(qname("report_cluster_k_scores")).orderBy("cluster_k"))
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 4. Execution And Data Quality
+
+# COMMAND ----------
+display(olap_validation_summary)
+display(spark.table(qname("report_olap_validation")).orderBy("department_id", "order_dow"))
+display(spark.table(qname("report_stream_validation")).orderBy("order_dow", "order_hour_of_day"))
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 5. Experimental Insights And Performance
+# MAGIC
+# MAGIC Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
+
+# COMMAND ----------
 display(spark.table(qname("report_classifier_metrics")))
 display(spark.table(qname("report_regression_metrics")))
-display(spark.table(qname("report_cluster_profiles")))
-display(spark.table(qname("report_stream_validation")).orderBy("order_dow", "order_hour_of_day"))
+display(spark.table(qname("report_classifier_feature_importance")).orderBy(F.desc("importance")))
 display(spark.table(qname("report_optimize_summary")).orderBy("query_name"))
-display(top_rules)
+display(spark.table(qname("report_optimize_timings")).orderBy("query_name", "run_stage"))
 
 # COMMAND ----------
 report_outline = [
-    ("1", "Problem statement and dataset caveats"),
-    ("2", "Medallion architecture and star schema"),
-    ("3", "Bronze, silver, and gold row-count validation"),
-    ("4", "OLAP findings with CUBE and ROLLUP plus persisted report tables"),
-    ("5", "Top association rules and recommendation example"),
-    ("6", "Cluster profiles and business interpretation"),
-    ("7", "Classifier and regression metrics versus baselines"),
-    ("8", "Streaming replay validation and serverless limitations"),
-    ("9", "Optimization timings before and after ZORDER"),
+    ("1", "Executive Overview: KPI counts, orders by day, and OLAP overview"),
+    ("2", "Order Behavior: daypart basket patterns, hourly basket size, and top products"),
+    ("3", "Recommendations And Segments: rules, seed recommendations, segment profiles, and k-selection"),
+    ("4", "Execution And Data Quality: OLAP validation and stream validation"),
+    ("5", "Experimental Insights And Performance: model metrics, feature importance, and optimize timings"),
 ]
 
 display(spark.createDataFrame(report_outline, ["section", "what_to_capture"]))

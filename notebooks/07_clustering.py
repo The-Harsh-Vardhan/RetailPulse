@@ -67,10 +67,18 @@ for k_value in (3, 4, 5):
     results.append((k_value, silhouette))
     predictions_by_k[k_value] = predicted
 
-scores_df = spark.createDataFrame(results, ["k", "silhouette_score"]).orderBy(F.desc("silhouette_score"))
+scores_df = spark.createDataFrame(results, ["cluster_k", "silhouette_score"]).orderBy(F.desc("silhouette_score"))
+
+(
+    scores_df.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .saveAsTable(qname("report_cluster_k_scores"))
+)
+
 display(scores_df)
 
-best_k = scores_df.first()["k"]
+best_k = scores_df.first()["cluster_k"]
 best_predictions = predictions_by_k[best_k]
 best_prediction_col = f"cluster_id_{best_k}"
 

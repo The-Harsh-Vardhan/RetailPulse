@@ -24,7 +24,7 @@ Current operating posture: controlled internal pilot on the current Databricks F
 
 ## Validated Run Snapshot
 - Successful end-to-end Databricks run completed on April 5, 2026.
-- Latest successful run id: `432431661287387`
+- Latest successful run id: `631388168060027`
 - Published AI/BI dashboard: `RetailPulse Demo Dashboard`
 - Sample size:
   - `341,974` sampled orders

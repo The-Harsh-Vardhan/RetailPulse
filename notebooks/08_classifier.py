@@ -87,4 +87,15 @@ metrics = spark.createDataFrame(
 display(metrics)
 
 feature_importance_rows = list(zip(feature_columns, model.featureImportances.toArray().tolist()))
-display(spark.createDataFrame(feature_importance_rows, ["feature_name", "importance"]).orderBy(F.desc("importance")))
+feature_importance_df = spark.createDataFrame(feature_importance_rows, ["feature_name", "importance"]).orderBy(
+    F.desc("importance")
+)
+
+(
+    feature_importance_df.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .saveAsTable(qname("report_classifier_feature_importance"))
+)
+
+display(feature_importance_df)

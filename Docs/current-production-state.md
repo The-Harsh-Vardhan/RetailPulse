@@ -12,14 +12,15 @@
 | Workspace host | `https://dbc-27b50dca-30e0.cloud.databricks.com/` |
 | Bundle job name | `retailpulse_full_rebuild` |
 | Job id | `61936309152043` |
-| Latest successful run id | `432431661287387` |
+| Latest successful run id | `631388168060027` |
 | Latest successful run date | April 5, 2026 |
-| Latest successful run URL | `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/432431661287387` |
+| Latest successful run URL | `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/631388168060027` |
 | Dashboard name | `RetailPulse Demo Dashboard` |
 | Dashboard id | `01f1305e8f1a115e8fb2b378bd4d8f99` |
 | Dashboard workspace path | `/Users/bt23csd041@iiitn.ac.in/RetailPulse Demo Dashboard.lvdash.json` |
 | Warehouse id | `2300565af9f2288c` |
-| Dashboard published revision | `2026-04-05T05:08:33.719Z` |
+| Dashboard published revision | `2026-04-05T08:40:02.619Z` |
+| Dashboard layout | `Dashboard V2` five-page published layout |
 | Report pack fallback | `notebooks/12_report_pack.py` |
 | Screenshot source of truth | `assets/screenshots/` |
 

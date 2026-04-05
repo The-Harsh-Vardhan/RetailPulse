@@ -18,8 +18,13 @@ Open these tabs in advance:
 
 Keep `Docs/showcase-summary.md` open as your backup source for numbers.
 
+Release-state anchor:
+- Successful run id: `631388168060027`
+- Published dashboard revision: `2026-04-05T08:40:02.619Z`
+- Keep both values ready if the walkthrough turns into a release-readiness discussion.
+
 ## Demo Goal
-Explain that RetailPulse is a Databricks Free Edition grocery-order analytics project built on Instacart. The project focuses on order behavior, recommendations, segmentation, and predictive analytics rather than raw sales because the dataset has no prices and no absolute dates.
+Explain that RetailPulse is a Databricks Free Edition grocery-order analytics project built on Instacart. The project focuses on order behavior, recommendations, segmentation, and exploratory predictive analytics rather than raw sales because the dataset has no prices and no absolute dates.
 
 ## Suggested Flow
 
@@ -42,55 +47,56 @@ Proof to show:
 - Databricks run page
 - Point out the successful status for the full notebook chain
 
-### 3. Show the medallion pipeline and star schema outcome
+### 3. Executive Overview
 Talk track:
-- Bronze ingests the uploaded sampled CSVs with schema checks.
-- Silver unifies order items and enriches products with aisle and department metadata.
-- Gold creates dimensions, facts, and marts used by analytics and ML notebooks.
+- Open the `Executive Overview` page first.
+- This page gives the fast business summary: KPI counters, orders by day, department demand, timing patterns, and core table counts.
+- It turns the medallion and OLAP work into a business-readable first impression.
 
 Proof to show:
-- Dashboard KPI counters or `12_report_pack.py` table-count output
-- Mention `fact_order_items` and `fact_orders`
+- KPI counters
+- Orders-by-day chart
+- Department-demand chart
+- Core table-count widget
 
-### 4. Show the business overview page
+### 4. Order Behavior
 Talk track:
-- The dashboard leads with KPI counters, department demand, timing patterns, and basket-size behavior by daypart.
-- This turns the OLAP work into a business-readable story instead of making the audience parse raw SQL.
+- Move to the `Order Behavior` page to show how basket behavior changes across dayparts and hours.
+- Use top-products evidence to make the dataset feel concrete instead of abstract.
 
 Proof to show:
-- `Business Overview` page in the AI/BI dashboard
-- Fallback: `05_olap.py`
+- Basket-size-by-daypart chart
+- Average-basket-size-by-day chart
+- Average-basket-size-by-hour chart
+- Top-products chart
 
-### 5. Show the recommendation engine
+### 5. Recommendations And Segments
 Talk track:
 - The original plan called for FP-growth, but the final Free Edition serverless implementation uses pairwise association-rule mining because that was the stable Spark Connect path in the target workspace.
 - The output is still a reusable `mart_association_rules` table with support, confidence, and lift.
+- KMeans was evaluated across `k = 3, 4, 5`, and the retained result gives three interpretable shopper segments.
 
 Proof to show:
-- Dashboard top-rules table or `06_association_rules.py`
-- Example rule: `Organic Garlic -> Organic Yellow Onion`
-- Example recommendation for `Organic Raspberries`: `Bag of Organic Bananas` and `Organic Strawberries`
+- Top recommendation rules table
+- Seed recommendations for `Organic Raspberries`
+- Segment profiles table
+- Segment-size chart
+- Cluster k-selection chart
 
-### 6. Show the customer segments
+### 6. Execution And Data Quality
 Talk track:
-- KMeans evaluated `k = 3, 4, 5` and the retained result gives three interpretable shopper segments.
-- These segments map cleanly to business language: loyal frequent shoppers, light occasional shoppers, and large-basket stock-up shoppers.
-
-Proof to show:
-- Dashboard customer-segments widget or `07_clustering.py`
-- Point at the three segment profiles and their average orders, basket size, and reorder rate
-
-### 7. Show execution and evidence
-Talk track:
-- The second dashboard page is about correctness, not cosmetics.
+- This page is about correctness, not cosmetics.
 - The streaming panel proves the replay output matches the equivalent batch aggregate.
-- The optimize panel records a real benchmark result, including the fact that optimization was slower on this sample.
+- The OLAP validation panel proves the persisted rollups match the direct grouped totals.
+- This is where you show that the project is not only visual but also checked.
 
 Proof to show:
-- `Execution And Evidence` page in the AI/BI dashboard
-- Fallback: `10_streaming_replay.py` and `11_optimize.py`
+- Streaming quality counters
+- Streaming validation detail table
+- OLAP validation summary
+- Release-signoff text widget
 
-### 8. Show the Experimental Insights carefully
+### 7. Experimental Insights And Performance
 Talk track:
 - The classifier predicts whether a user is a `power_user`, defined from the top quartile of `total_orders`.
 - The regression predicts basket size from order context and user history.
@@ -99,15 +105,14 @@ Talk track:
 - If challenged on the metrics, say the current feature construction is useful for demonstration but still needs a stricter leakage-safe redesign before submission-grade claims.
 
 Proof to show:
-- Dashboard exploratory-metrics table or `08_classifier.py` and `09_regression.py`
-- Mention the current exploratory metrics:
-  - classifier accuracy `0.9136` vs baseline `0.7445`
-  - classifier AUC `0.8813`
-  - regression RMSE `5.0945` vs baseline `7.6627`
+- Exploratory-metrics table
+- Classifier feature-importance chart
+- Optimize comparison chart
+- Raw optimize timings
 
-### 9. Close with project realism
+### 8. Close with project realism
 Talk track:
-- RetailPulse is showcaseable because it is reproducible, it runs end to end on Databricks Free Edition, and it has a presentable dashboard plus notebook fallback.
+- RetailPulse is showcaseable because it is reproducible, it runs end to end on Databricks Free Edition, and it has a rich dashboard plus notebook fallback.
 - The project is also honest about what is exploratory, what is validated, and what still needs tightening before final submission.
 
 Proof to show:
