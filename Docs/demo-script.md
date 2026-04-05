@@ -1,6 +1,6 @@
 # RetailPulse Demo Script
 
-This script is designed for a 6 to 8 minute live demo. It keeps the presentation aligned with the actual finished implementation and avoids overclaiming features the project does not have.
+This script is designed for a 6 to 8 minute live demo or boss walkthrough. It keeps the presentation aligned with the actual finished implementation and avoids overclaiming features the project does not have.
 
 ## Before You Start
 Open these tabs in advance:
@@ -36,7 +36,7 @@ Proof to show:
 ### 2. Show the successful end-to-end Databricks run
 Talk track:
 - The project is not just dashboard screenshots; it runs as a full sequential Databricks job.
-- The validated run completed successfully on April 3, 2026.
+- The validated run completed successfully on April 5, 2026.
 
 Proof to show:
 - Databricks run page
@@ -90,11 +90,12 @@ Proof to show:
 - `Execution And Evidence` page in the AI/BI dashboard
 - Fallback: `10_streaming_replay.py` and `11_optimize.py`
 
-### 8. Show the predictive models carefully
+### 8. Show the Experimental Insights carefully
 Talk track:
 - The classifier predicts whether a user is a `power_user`, defined from the top quartile of `total_orders`.
 - The regression predicts basket size from order context and user history.
-- Present both supervised notebooks as exploratory modeling deliverables, not as rigorous final predictive proof.
+- Present both supervised notebooks as `Experimental Insights`, not as rigorous final predictive proof or operational decision logic.
+- State clearly that no business recommendation or automation depends on these outputs in the current release.
 - If challenged on the metrics, say the current feature construction is useful for demonstration but still needs a stricter leakage-safe redesign before submission-grade claims.
 
 Proof to show:
@@ -114,7 +115,7 @@ Proof to show:
 - `12_report_pack.py` fallback
 
 ## Closing Line
-RetailPulse is showcaseable because it is reproducible, it runs end to end on Databricks Free Edition, and its key results are backed by validated tables plus a packaged evidence set instead of hand-waved notebook claims.
+RetailPulse is boss-review ready because it is reproducible, it runs end to end on Databricks Free Edition, and its key results are backed by validated tables plus a packaged evidence set instead of hand-waved notebook claims.
 
 ## Likely Questions And Short Answers
 
@@ -134,4 +135,4 @@ Because Free Edition serverless supports `Trigger.AvailableNow`, so the project 
 Because the sample is relatively small. The benchmark still demonstrates the optimization workflow and records the real measured result.
 
 ### Are the classifier and regression metrics final?
-No. They are useful exploratory results for the demo, but they should not be presented as rigorous final predictive evidence until the feature design is tightened to avoid leakage.
+No. They remain `Experimental Insights` for this release, and they should not be presented as rigorous final predictive evidence until the feature design is tightened to avoid leakage.

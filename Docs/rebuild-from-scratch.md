@@ -49,6 +49,13 @@ databricks version
 
 If `databricks version` does not report `0.205.x` or newer, update the CLI before continuing.
 
+On Windows, also run:
+```powershell
+where databricks
+```
+
+If the first result points to an older Python-installed CLI, fix `PATH` before continuing. If you do not, `databricks bundle ...` will fail later with `No such command 'bundle'`.
+
 ## 3. Clone The Repository
 ```powershell
 git clone https://github.com/The-Harsh-Vardhan/RetailPulse.git
@@ -68,7 +75,8 @@ The maintenance rule is:
 ## 5. Run Local Validation Before Touching Databricks
 ```powershell
 python -m unittest -q tests.test_sample_instacart tests.test_split_stream_replay_batches tests.test_export_databricks_source_to_ipynb
-python -m py_compile notebooks\*.py scripts\*.py tests\*.py
+$files = @((Get-ChildItem notebooks -Filter *.py).FullName) + @((Get-ChildItem scripts -Filter *.py).FullName) + @((Get-ChildItem tests -Filter *.py).FullName)
+python -m py_compile $files
 python scripts/export_databricks_source_to_ipynb.py --check
 ```
 
@@ -312,7 +320,7 @@ Behavior:
 ## 19. Future Extensions
 Not yet implemented in the current submission-safe scope:
 - MLflow experiment tracking
-- Databricks SQL or AI/BI dashboard
+- Dashboard export automation, richer filters, and refreshed UI-native screenshot capture
 - Synthetic `product_price_map` with `estimated_sales_amount`
 - Second supervised model such as RandomForest
 - Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming

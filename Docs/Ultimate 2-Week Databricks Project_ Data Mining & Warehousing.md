@@ -33,9 +33,8 @@ RetailPulse uses Databricks Asset Bundles and GitHub Actions:
 ## Future Works
 The original broader roadmap included the following items, which remain intentionally out of the current scope:
 - MLflow experiment tracking
-- Databricks SQL or AI/BI dashboard
+- Dashboard export automation, richer filters, and refreshed UI-native screenshot capture
 - synthetic `product_price_map` plus `estimated_sales_amount`
 - second supervised model such as RandomForest
 - richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
 - RDD-style Hadoop demo on non-serverless compute
-

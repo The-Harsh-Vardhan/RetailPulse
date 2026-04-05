@@ -49,7 +49,7 @@ The supervised results are still presentation-useful, but they should be framed 
 ## Future Works
 Features from the original broader plan that are not implemented in the current repo:
 - MLflow experiment tracking
-- Databricks SQL or AI/BI dashboard
+- Dashboard export automation, richer filters, and refreshed UI-native screenshot capture
 - Synthetic `product_price_map` plus `estimated_sales_amount`
 - Second supervised model such as RandomForest
 - Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming

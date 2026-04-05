@@ -1,23 +1,36 @@
 # RetailPulse: Grocery Order Analytics & Recommendation on Databricks
 
-RetailPulse is a GitHub-ready Databricks Free Edition project for grocery order analytics and recommendation. It uses the Instacart dataset to build a bronze, silver, and gold Delta pipeline, a star-schema analytics layer, serverless-safe association rules, clustering, supervised models, and a replay-style streaming demo.
+RetailPulse is a GitHub-ready Databricks Free Edition project for grocery order analytics and recommendation. It uses the Instacart dataset to build a bronze, silver, and gold Delta pipeline, a star-schema analytics layer, serverless-safe association rules, clustering, Experimental Insights models, and a replay-style streaming demo.
 
 The repo is organized so the project can be reviewed in Git, rebuilt from scratch, deployed with Databricks Asset Bundles, and run manually from GitHub Actions without wasting Free Edition quota.
 
+## Release Posture
+- Controlled internal production pilot on the current Databricks Free Edition workspace
+- Manual release path only
+- Classifier and regression outputs remain in an `Experimental Insights` lane and are not operational decision drivers in this release
+
 ## Validated Run Snapshot
-- Latest validated end-to-end Databricks run: April 3, 2026
+- Latest validated end-to-end Databricks run: April 5, 2026
 - Workspace target: Databricks Free Edition serverless
 - End-to-end status: `SUCCESS`
-- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/320947603989925`
+- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/432431661287387`
+- Published AI/BI dashboard: `RetailPulse Demo Dashboard`
 - Deterministic sample size:
   - `341,974` sampled orders
   - `3,267,191` sampled prior order rows
   - `137,847` sampled train order rows
 
+## Review This Repo In 5 Minutes
+1. Read [Showcase Summary](Docs/showcase-summary.md) for the finished project story and validated results.
+2. Read [RetailPulse Handbook](Docs/RetailPulse%20Handbook.md) if you want the full explanation of what the project does and how to run it.
+3. Use [Boss Brief](Docs/boss-brief.md) and [Demo Script](Docs/demo-script.md) for the live walkthrough order.
+4. Inspect the screenshot evidence pack through [Evidence Pack](Docs/evidence-pack.md) and `assets/screenshots/`.
+5. Read [Next Step Priority Plan](Docs/Next%20Step%20Priority%20Plan.md) if you want the recommended path after the current release freeze.
+
 ## Project Snapshot
 - Dataset: Instacart order history, sampled deterministically at 10% of users
 - Platform target: Databricks Free Edition, serverless-only
-- Core outputs: Delta tables, OLAP queries, association rules, user segments, exploratory classifier/regression metrics, replay-stream validation
+- Core outputs: Delta tables, persisted OLAP report tables, association rules, user segments, Experimental Insights metrics, replay-stream validation, and a published AI/BI dashboard
 - Canonical notebook format: Databricks source notebooks in `.py`
 - Convenience notebook format: generated `.ipynb` copies in `notebooks_ipynb/`
 
@@ -27,10 +40,11 @@ The repo is organized so the project can be reviewed in Git, rebuilt from scratc
 - OLAP analysis with `CUBE` and `ROLLUP`
 - Serverless-safe pairwise association-rule mining for product recommendations
 - Customer segmentation using KMeans
-- An exploratory decision-tree classifier for power-user prediction
-- An exploratory linear-regression model for basket-size prediction
+- An `Experimental Insights` lane with a decision-tree classifier for power-user prediction
+- An `Experimental Insights` lane with a linear-regression model for basket-size prediction
 - A file-based replay stream using `Trigger.AvailableNow`
 - Optimize and benchmark evidence using `OPTIMIZE` and `ZORDER BY`
+- A published AI/BI dashboard plus `12_report_pack.py` fallback for boss review and release evidence
 
 ## Why This Project Does Not Use Raw Sales
 - Instacart does not include product prices or revenue
@@ -44,13 +58,24 @@ This keeps the submission honest and aligned with the real dataset instead of in
 Local sample builder -> Raw CSV upload -> Bronze Delta tables
 Bronze -> Silver cleansed/enriched tables
 Silver -> Gold dimensions, facts, and marts
-Gold -> OLAP, pairwise association rules, KMeans, classifier, regression
+Gold -> OLAP, pairwise association rules, KMeans, Experimental Insights notebooks
 Gold held-out slice -> Replay batches -> AvailableNow streaming aggregate
 ```
 
 Assets:
 - [retailpulse_medallion.mmd](assets/retailpulse_medallion.mmd)
 - [retailpulse_star_schema.mmd](assets/retailpulse_star_schema.mmd)
+
+## GitHub Showcase
+| Successful run | Business overview |
+| --- | --- |
+| ![Successful Databricks run](assets/screenshots/01_run_success.png) | ![Business overview and OLAP outputs](assets/screenshots/03_olap_outputs.png) |
+
+| Recommendation proof | Execution evidence |
+| --- | --- |
+| ![Association rules and recommendation evidence](assets/screenshots/04_association_rules.png) | ![Streaming validation and execution evidence](assets/screenshots/08_stream_validation.png) |
+
+More packaged evidence lives in `assets/screenshots/`, and the capture/source-of-truth rules live in [Docs/evidence-pack.md](Docs/evidence-pack.md).
 
 ## Current Results Snapshot
 
@@ -64,7 +89,7 @@ Assets:
 | `mart_association_rules` | 49 |
 | `stream_order_slot_metrics` | 158 |
 
-### Exploratory model metrics
+### Experimental Insights metrics
 | Metric | Value |
 | --- | ---: |
 | Decision-tree accuracy | 0.9136 |
@@ -74,7 +99,7 @@ Assets:
 | Linear-regression RMSE | 5.0945 |
 | Mean baseline RMSE | 7.6627 |
 
-These supervised results are useful for demo discussion, but they should be presented as exploratory rather than rigorous final predictive evidence. The current feature construction still needs a stricter leakage-safe redesign before final submission-grade claims.
+These Experimental Insights are retained for boss review and product discussion, but they are not operational KPIs or release gates. The current feature construction still needs a stricter leakage-safe redesign before final predictive claims or automated decisions.
 
 ### Recommendation example
 - Seed product: `Organic Raspberries`
@@ -93,6 +118,8 @@ These supervised results are useful for demo discussion, but they should be pres
 ## Showcase Docs
 - [Showcase Summary](Docs/showcase-summary.md)
 - [Demo Script](Docs/demo-script.md)
+- [RetailPulse Handbook](Docs/RetailPulse%20Handbook.md)
+- [BI Integration And Visualization Strategy](Docs/BI%20Integration%20And%20Visualization%20Strategy.md)
 - [Dashboard Spec](Docs/databricks-dashboard-spec.md)
 - [Dashboard UI Guide](Docs/databricks-dashboard-ui-guide.md)
 - [Evidence Pack](Docs/evidence-pack.md)
@@ -102,6 +129,15 @@ These supervised results are useful for demo discussion, but they should be pres
 - [Ultimate 2-Week Guide](Docs/Ultimate%202-Week%20Databricks%20Project_%20Data%20Mining%20%26%20Warehousing.md)
 - [Rebuild From Scratch](Docs/rebuild-from-scratch.md)
 - [Original Blueprint](Docs/RetailPulse%20PLAN.md)
+
+## Operations Docs
+- [Current Production State](Docs/current-production-state.md)
+- [Next Step Priority Plan](Docs/Next%20Step%20Priority%20Plan.md)
+- [Production Runbook](Docs/production-runbook.md)
+- [Release Checklist](Docs/release-checklist.md)
+- [Boss Brief](Docs/boss-brief.md)
+- [Dashboard Metadata](Docs/dashboard-metadata.md)
+- [Release Smoke Checks](sql/release_smoke_checks.sql)
 
 ## Repository Layout
 - `notebooks/`: canonical Databricks source notebooks
@@ -142,6 +178,8 @@ Windows:
 winget install Databricks.DatabricksCLI
 databricks version
 ```
+
+If `databricks bundle` later fails with `No such command 'bundle'`, your shell is still pointing at the deprecated legacy CLI. On Windows, run `where databricks` and make sure the newer winget-installed Databricks CLI is ahead of the old Python-installed one in `PATH`.
 
 Linux or macOS:
 ```bash
@@ -287,8 +325,7 @@ Or, from GitHub Actions:
 - `fact_orders.basket_size` matches grouped line counts from `fact_order_items`
 - Association-rule mining produces non-trivial rules and at least three recommendations for a seed basket
 - KMeans returns centroid summaries for `k in {3,4,5}`
-- The current exploratory classifier evaluation beats the majority baseline
-- The current exploratory regression evaluation beats the mean-basket baseline and is presented as exploratory
+- Classifier and regression outputs remain available as `Experimental Insights` and are explicitly documented as non-operational
 - Replay stream output matches the equivalent batch aggregate
 - Bundle validation passes without manual notebook path edits
 
@@ -306,6 +343,14 @@ Use these in the GitHub repo and final report:
 
 The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. The current PNGs were regenerated from the latest successful Databricks run and live warehouse results; if you later capture cleaner UI-native dashboard screenshots, keep the same filenames and replace them in place.
 
+For GitHub review, the top-priority files are:
+- `assets/screenshots/01_run_success.png`
+- `assets/screenshots/03_olap_outputs.png`
+- `assets/screenshots/04_association_rules.png`
+- `assets/screenshots/08_stream_validation.png`
+- `Docs/showcase-summary.md`
+- `Docs/RetailPulse Handbook.md`
+
 ## Troubleshooting
 ### Why are the notebooks in `.py` instead of `.ipynb`?
 Because `.py` is the reviewable source of truth in Git. The repo still provides generated `.ipynb` copies for people who prefer Jupyter-format files.
@@ -313,19 +358,28 @@ Because `.py` is the reviewable source of truth in Git. The repo still provides 
 ### Can I run everything automatically in Databricks?
 Yes, once the sampled raw CSVs are uploaded. The Databricks Asset Bundle defines a single sequential multi-task job, and GitHub Actions can validate, deploy, and run it manually through `workflow_dispatch`.
 
+### Why does `databricks bundle` say `No such command 'bundle'`?
+Because the shell is usually resolving the deprecated legacy Databricks CLI instead of the newer bundle-capable CLI. Fix `PATH`, verify `where databricks` on Windows, and make sure the newer Databricks CLI is the one being executed before you try bundle commands again.
+
 ### Why does the recommendation notebook not use FP-growth?
 The final Databricks Free Edition serverless implementation uses pairwise association-rule mining instead. In this workspace, Spark Connect serverless was not a reliable path for `FPGrowth`, so the recommendation step was adapted to a submission-safe implementation that still writes `mart_association_rules` and supports seed-product recommendations.
 
 ### Why did the optimize benchmark get slower?
 Because the dataset sample is small. The benchmark was still run and recorded honestly, but `OPTIMIZE` plus `ZORDER BY` did not improve those two measured queries on this specific sample size.
 
-### Can I use MLflow or dashboards later?
-Yes. MLflow is still future work. The repo now includes dashboard build assets, canonical SQL queries, and a notebook-dashboard fallback, but the live AI/BI dashboard still needs to be created in the Databricks workspace.
+### Can I use MLflow or extend the dashboard later?
+Yes. MLflow is still future work. The AI/BI dashboard is already published in the current workspace; future work is dashboard export automation, richer filters, and cleaner UI-native screenshot refreshes.
+
+### Can I connect RetailPulse to Power BI or Tableau?
+Yes, but the current recommendation is Databricks dashboard first and Power BI Desktop second. The comparison, supported vendor paths, and CLI/MCP reality are documented in `Docs/BI Integration And Visualization Strategy.md`. There is no Power BI or Tableau MCP server configured in this environment today.
+
+### Should I build more models right now?
+No. The current priority is release hardening, dashboard polish, and boss-facing walkthrough stability. The short roadmap is documented in `Docs/Next Step Priority Plan.md`. More supervised-model work should wait unless ML rigor becomes the top evaluation criterion.
 
 ## Future Works
 The following items were in the broader original vision but are not part of the current implemented scope:
 - MLflow experiment tracking for models and artifacts
-- Published AI/BI dashboard with richer filters, layout polish, and workspace screenshots committed as final evidence
+- Dashboard-as-code export, richer filters, and refreshed UI-native dashboard screenshots
 - Synthetic `product_price_map` plus `estimated_sales_amount`
 - A second supervised model such as RandomForest
 - Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming

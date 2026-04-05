@@ -2,11 +2,24 @@
 
 This document is the fastest way to present the finished project. It captures the validated run, the measurable outputs, and the talking points that match the actual Databricks implementation.
 
+## GitHub Reviewer Path
+If someone opens this repository cold, the fastest clean path is:
+1. `README.md`
+2. this summary
+3. `assets/screenshots/`
+4. `Docs/RetailPulse Handbook.md`
+5. `Docs/demo-script.md`
+
+If the review is more operational than academic, then add:
+6. `Docs/current-production-state.md`
+7. `Docs/release-checklist.md`
+8. `Docs/Next Step Priority Plan.md`
+
 ## Validated Run
-- Validation date: April 3, 2026
+- Validation date: April 5, 2026
 - Databricks target: Free Edition serverless
 - Final job status: `SUCCESS`
-- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/320947603989925`
+- Authenticated run URL: `https://dbc-27b50dca-30e0.cloud.databricks.com/?o=7474658274233226#job/61936309152043/run/432431661287387`
 
 ## Data Scope
 RetailPulse uses the Instacart public order-history dataset with a deterministic 10% user sample:
@@ -44,7 +57,7 @@ Top departments by item count:
 
 These outputs come from the gold fact model using `CUBE`, `ROLLUP`, and grouped basket-size analysis.
 
-The April 3 validated run captured these through notebook output. The repo now includes report-table persistence for OLAP on rerun so the evidence path can be standardized before final submission.
+The April 5 validated release persists these as report tables and exposes them in both the AI/BI dashboard and the `12_report_pack.py` fallback flow.
 
 ## Recommendation Results
 The final workspace implementation uses serverless-safe pairwise association-rule mining instead of FP-growth. It still writes a reusable `mart_association_rules` table with support, confidence, and lift.
@@ -73,7 +86,7 @@ KMeans produced three interpretable shopper segments:
 | Cluster 1 | 9,050 | 7.5448 | 6.6317 | 0.3594 | 18.5083 | Light occasional shoppers |
 | Cluster 2 | 5,130 | 10.1033 | 17.1178 | 0.4402 | 16.9798 | Large-basket stock-up shoppers |
 
-## Exploratory Supervised Learning Results
+## Experimental Insights
 | Model | Metric | Value |
 | --- | --- | ---: |
 | Decision tree | Accuracy | 0.9136 |
@@ -84,9 +97,9 @@ KMeans produced three interpretable shopper segments:
 | Mean baseline | RMSE | 7.6627 |
 
 Interpretation:
-- In the current exploratory evaluation, the classifier materially outperformed the majority baseline for `power_user` prediction.
-- In the current exploratory evaluation, the regression materially outperformed the mean-basket baseline for basket-size prediction.
-- These supervised results should still be presented as exploratory because the feature construction needs a stricter leakage-safe redesign before they count as rigorous final predictive evidence.
+- In the current experimental evaluation, both models beat simple baselines.
+- These metrics are useful for boss review and technical discussion, but they are not release gates and do not drive automated decisions in the current internal pilot.
+- The feature construction still needs a stricter leakage-safe redesign before these models can be presented as rigorous final predictive evidence.
 
 ## Streaming Replay Validation
 The streaming notebook uses `Trigger.AvailableNow` because Databricks Free Edition serverless does not support the broader continuous streaming options.
@@ -109,6 +122,7 @@ This is an important honesty point for the demo: the optimization step completed
 
 ## What Makes The Project Showcaseable
 - It runs end to end on Databricks Free Edition serverless.
+- The live AI/BI dashboard is published and backed by the same report tables used by the notebook fallback.
 - It is GitHub-ready with clean notebook sources, generated `.ipynb` mirrors, bundle automation, CI, and rebuild documentation.
 - The repo now standardizes evidence through persisted report tables where available and a named screenshot pack for demo packaging.
 - The project is explicit about dataset constraints and platform limitations instead of overclaiming.
@@ -123,3 +137,9 @@ This is an important honesty point for the demo: the optimization step completed
 - `11_optimize.py` timing summary
 - `12_report_pack.py` as the closing evidence notebook
 - `assets/screenshots/` for the packaged demo evidence set
+
+## Recommended GitHub Highlights
+- Lead with the successful Databricks run screenshot and the business-overview dashboard screenshot.
+- Show recommendation proof and streaming validation before you show any exploratory model metrics.
+- Keep classifier and regression evidence in the repo, but do not make them the hero assets.
+- Link reviewers to `Docs/RetailPulse Handbook.md` if they want the full operating model instead of just the outcome snapshot.
