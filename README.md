@@ -13,6 +13,14 @@ This repository is now packaged for GitHub in three layers:
 - [RESULTS_README.md](RESULTS_README.md): the Databricks study, visuals, and validated results
 - [HOW_TO_USE_README.md](HOW_TO_USE_README.md): the operator guide for rerunning the workflow and adapting it to a new dataset
 
+## Repository Docs
+
+These root-level documents are meant to appear as first-class repository docs on GitHub:
+- [README.md](README.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [SECURITY.md](SECURITY.md)
+
 ## At A Glance
 
 ### Implemented now
