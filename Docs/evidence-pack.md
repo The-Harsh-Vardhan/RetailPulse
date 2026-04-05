@@ -4,8 +4,8 @@ This document defines the fixed demo/submission evidence set for RetailPulse.
 
 ## Current Status
 - The screenshot slots now exist under `assets/screenshots/`.
-- The files currently use labeled placeholder images so the repo has a stable artifact shape.
-- Before final submission, replace each placeholder with a real screenshot from the AI/BI dashboard or the notebook fallback after the latest full rerun.
+- The current files are real evidence renders generated from the latest successful Databricks run and live SQL result sets.
+- If you later capture cleaner UI-native screenshots from the AI/BI dashboard, keep the same filenames and replace these rendered artifacts in place.
 
 ## Preferred Capture Order
 1. Capture the two AI/BI dashboard pages first.
@@ -45,4 +45,4 @@ Classifier and regression results are exploratory and useful for demo discussion
 ## Submission Rule
 - Use the dashboard screenshots for the demo package wherever possible.
 - Use the report tables plus `12_report_pack.py` for the written report and fallback evidence flow.
-- Do not claim a screenshot exists unless the placeholder has been replaced with a real captured artifact.
+- Do not claim an artifact exists unless the file has been replaced with a real data-backed capture or render from the latest validated run.

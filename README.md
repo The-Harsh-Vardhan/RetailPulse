@@ -304,7 +304,7 @@ Use these in the GitHub repo and final report:
 - Replay-stream validation
 - Optimize timing comparison
 
-The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. Replace the labeled placeholders in that folder with real screenshots from the validated Databricks run before final submission.
+The demo evidence set now lives under `assets/screenshots/`, and the capture checklist lives in `Docs/evidence-pack.md`. The current PNGs were regenerated from the latest successful Databricks run and live warehouse results; if you later capture cleaner UI-native dashboard screenshots, keep the same filenames and replace them in place.
 
 ## Troubleshooting
 ### Why are the notebooks in `.py` instead of `.ipynb`?
