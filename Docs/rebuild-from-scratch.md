@@ -10,6 +10,7 @@ By the end of this guide you should have:
 - A Databricks Free Edition workspace authenticated through the Databricks CLI
 - The `retailpulse_full_rebuild` bundle job deployed
 - The full notebook sequence executed in Databricks after raw sample upload
+- The supplementary predictive and prescriptive deep-dive notebooks available after the report pack
 
 ## 1. Prerequisites
 
@@ -225,6 +226,8 @@ The job runs these notebooks in order:
 11. `10_streaming_replay.py`
 12. `11_optimize.py`
 13. `12_report_pack.py`
+14. `13_predictive_analysis.py`
+15. `14_prescriptive_analysis.py`
 
 ## 14. What To Expect From Each Stage
 
@@ -242,12 +245,14 @@ The job runs these notebooks in order:
 - User mart and association-rule mart are created
 - Replay-stream metrics table is written after the streaming notebook
 
-### Analytics And ML
+### Analytics, ML, And Deep Dives
 - OLAP outputs should show `CUBE` and `ROLLUP` totals
 - Association-rule mining should produce non-trivial rules
 - KMeans should evaluate `k = 3, 4, 5`
 - Classifier should beat the majority baseline
 - Regression should beat the mean baseline or be treated as exploratory
+- `13_predictive_analysis.py` should package the persisted predictive evidence without retraining the models
+- `14_prescriptive_analysis.py` should package the recommendation, segment, and timing outputs into action-oriented views
 
 ## 15. Collect Final Artifacts
 After a successful run, capture:
@@ -258,6 +263,8 @@ After a successful run, capture:
 - Regression metrics
 - Replay-stream versus batch validation
 - Optimize timing evidence
+- Predictive and prescriptive deep-dive notebook outputs for reviewer walkthroughs
+- `Docs/dashboard-output-diagrams.md` as the widget-by-widget dashboard explainer
 
 Use `12_report_pack.py` to assemble the final report-facing outputs.
 
@@ -316,6 +323,7 @@ Behavior:
 - Upload sampled CSVs
 - Run `retailpulse_full_rebuild`
 - Collect outputs from `12_report_pack.py`
+- Review `13_predictive_analysis.py` and `14_prescriptive_analysis.py`
 
 ## 19. Future Extensions
 Not yet implemented in the current submission-safe scope:
@@ -325,3 +333,4 @@ Not yet implemented in the current submission-safe scope:
 - Second supervised model such as RandomForest
 - Richer streaming via Kafka, Auto Loader, or paid-tier continuous streaming
 - RDD-style Hadoop demo on non-serverless compute
+

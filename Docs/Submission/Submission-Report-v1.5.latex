@@ -1,0 +1,381 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{placeins}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+\graphicspath{{./Figures/}}
+
+\title{RetailPulse Submission Report v1.5 (Single-Column)\\
+\large Dashboard and Diagram Walkthrough for Submission and Presentation}
+\author{Team RetailPulse}
+\date{April 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This single-column report is the presentation-ready submission narrative for RetailPulse.
+It combines architecture diagrams with dashboard outputs and explains what each visual proves.
+The report follows the validated five-page dashboard story: Executive Overview, Order Behavior,
+Recommendations and Segments, Execution and Data Quality, and Experimental Insights and
+Performance. Figures use Overleaf-friendly paths under \texttt{./Figures/image\_name}.
+\end{abstract}
+
+\section{Purpose and Submission Scope}
+This document is designed for two use cases: (1) submission review and (2) presentation flow.
+Instead of only showing screenshots, each figure and table includes interpretation and evidence context.
+The dashboard is the primary review surface, while the notebook report pack remains the fallback.
+
+\subsection{Validated Context}
+The evidence corresponds to the validated Databricks run and Dashboard V2 packaging used in the
+RetailPulse repository. The goal is to prove that the pipeline is populated, analytics outputs are
+interpretable, and validation checks are reviewable.
+
+\section{System Diagrams and Architecture Explanation}
+This section explains how data moves from raw files to dashboard-ready evidence. These diagrams are
+included to make the implementation logic understandable before reviewing dashboard outputs.
+
+\subsection{End-to-End Workflow Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    box/.style={draw, rounded corners, align=center, minimum width=3.2cm, minimum height=0.95cm, fill=blue!4},
+    stage/.style={draw, rounded corners, align=center, minimum width=3.2cm, minimum height=0.95cm, fill=green!6},
+    out/.style={draw, rounded corners, align=center, minimum width=3.2cm, minimum height=0.95cm, fill=orange!8},
+    arr/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[box] (sample) at (0,0) {Local Sampling\\\texttt{sample\_instacart.py}};
+\node[box] (upload) at (4.2,0) {Upload to UC\\Raw Volume};
+\node[stage] (bronze) at (8.4,0) {Bronze Ingest\\\texttt{02\_bronze\_ingest.py}};
+\node[stage] (silver) at (12.6,0) {Silver Transform\\\texttt{03\_silver\_transform.py}};
+\node[stage] (gold) at (16.8,0) {Gold Model\\\texttt{04\_gold\_model.py}};
+
+\node[out] (olap) at (8.4,-2.2) {OLAP\\\texttt{05\_olap.py}};
+\node[out] (rules) at (12.6,-2.2) {Rules \& Segments\\\texttt{06--07}};
+\node[out] (ops) at (16.8,-2.2) {Streaming + Optimize\\\texttt{10--11}};
+
+\node[out] (report) at (12.6,-4.4) {Report Pack\\\texttt{12\_report\_pack.py}};
+\node[out] (dash) at (16.8,-4.4) {AI/BI Dashboard\\V2};
+
+\draw[arr] (sample) -- (upload);
+\draw[arr] (upload) -- (bronze);
+\draw[arr] (bronze) -- (silver);
+\draw[arr] (silver) -- (gold);
+
+\draw[arr] (gold) -- (olap);
+\draw[arr] (gold) -- (rules);
+\draw[arr] (gold) -- (ops);
+\draw[arr] (olap) -- (report);
+\draw[arr] (rules) -- (report);
+\draw[arr] (ops) -- (report);
+\draw[arr] (report) -- (dash);
+\end{tikzpicture}
+\caption{RetailPulse end-to-end flow from sampling and medallion pipeline to report pack and dashboard output surfaces.}
+\label{fig:endtoend}
+\end{figure}
+
+\textbf{Explanation:} Figure~\ref{fig:endtoend} shows the controlled progression from raw data to
+review artifacts. The key submission value is that dashboard visuals are downstream of persisted
+warehouse outputs, not ad hoc notebook cells.
+
+\subsection{Gold-Layer Star Model Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm and 1.15cm,
+    dim/.style={draw, rounded corners, align=center, minimum width=2.65cm, minimum height=0.85cm, fill=purple!6},
+    fact/.style={draw, rounded corners, align=center, minimum width=2.8cm, minimum height=0.95cm, fill=teal!8},
+    arr/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[dim] (du) {dim\_user};
+\node[dim, below=of du] (dp) {dim\_product};
+\node[dim, below=of dp] (dd) {dim\_department};
+\node[dim, below=of dd] (ds) {dim\_order\_slot};
+
+\node[fact, right=of dp] (foi) {fact\_order\_items};
+\node[fact, above=of foi] (fo) {fact\_orders};
+\node[fact, below=of foi] (muf) {mart\_user\_features};
+
+\draw[arr] (du.east) -- (fo.west);
+\draw[arr] (du.east) -- (foi.west);
+\draw[arr] (dp.east) -- (foi.west);
+\draw[arr] (dd.east) -- (foi.west);
+\draw[arr] (ds.east) -- (fo.east);
+\draw[arr] (ds.east) -- (foi.east);
+\draw[arr] (fo.south) -- (muf.north);
+\end{tikzpicture}
+\caption{Simplified gold-layer model used for OLAP, recommendation mining, segmentation, and validation outputs.}
+\label{fig:starmodel}
+\end{figure}
+
+\textbf{Explanation:} Figure~\ref{fig:starmodel} clarifies why the dashboard pages stay
+consistent: most widgets are derived from stable facts/dimensions and report tables built on top of
+this model.
+
+\section{Dashboard Structure and Evidence Mapping}
+The dashboard is organized into five pages. Each page has a specific analytical role and corresponding
+proof artifacts.
+
+\begin{table}[H]
+\centering
+\caption{Dashboard page map used in this report.}
+\label{tab:pagemap}
+\begin{tabularx}{\textwidth}{p{0.75cm} p{3.2cm} X}
+\toprule
+\textbf{Page} & \textbf{Name} & \textbf{What it proves} \\
+\midrule
+1 & Executive Overview & Core table population and high-level order behavior are visible quickly. \\
+2 & Order Behavior & Basket size and demand variation are interpretable by time and product. \\
+3 & Recommendations and Segments & Cross-sell rules and customer groups are actionable and explainable. \\
+4 & Execution and Data Quality & Streaming replay and OLAP checks validate correctness. \\
+5 & Experimental Insights and Performance & Exploratory ML and optimization evidence are available with proper caution. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Page 1: Executive Overview}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{01_run_success.png}
+\caption{Run-success evidence showing the validated Databricks job completion.}
+\label{fig:runsuccess}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Validated run metadata.}
+\label{tab:runfacts}
+\small
+\begin{tabular}{p{4.0cm} p{8.8cm}}
+\toprule
+\textbf{Item} & \textbf{Value} \\
+\midrule
+Workspace target & Databricks Free Edition serverless \\
+Bundle job name & \texttt{retailpulse\_full\_rebuild} \\
+Job id & \texttt{61936309152043} \\
+Successful run id & \texttt{631388168060027} \\
+Dashboard & \texttt{RetailPulse Demo Dashboard} \\
+Dashboard revision & \texttt{2026-04-05T08:40:02.619Z} \\
+Notebook fallback & \texttt{12\_report\_pack.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Core table-count evidence (exact validated values).}
+\label{tab:counts}
+\small
+\begin{tabular}{p{5.8cm} r}
+\toprule
+\textbf{Table} & \textbf{Rows} \\
+\midrule
+\texttt{bronze\_orders} & 341,974 \\
+\texttt{silver\_order\_items} & 3,405,038 \\
+\texttt{fact\_order\_items} & 3,405,038 \\
+\texttt{fact\_orders} & 334,438 \\
+\texttt{mart\_association\_rules} & 49 \\
+\texttt{report\_cluster\_profiles} & 3 \\
+\texttt{report\_cluster\_k\_scores} & 3 \\
+\texttt{report\_stream\_validation} & 158 \\
+\texttt{report\_optimize\_summary} & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{10_orders_by_day.png}
+\caption{Orders-by-day trend used to summarize weekly demand rhythm and basket movement.}
+\label{fig:ordersday}
+\end{figure}
+
+\textbf{Explanation:} This page answers the first reviewer question: \emph{did the pipeline run and
+produce meaningful tables?} Run metadata and table-count evidence confirm execution and population,
+while orders-by-day gives immediate behavioral readability.
+
+\section{Page 2: Order Behavior}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{03_olap_outputs.png}
+\caption{Department demand and timing-pattern OLAP visualizations for category-level behavior analysis.}
+\label{fig:olap}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{11_top_products.png}
+\caption{Top-products and basket behavior evidence for demand concentration and mission-size interpretation.}
+\label{fig:topproducts}
+\end{figure}
+
+\textbf{Explanation:} Page 2 explains \emph{how} customers buy: by daypart, hour, department, and
+product rank. Together, these visuals support timing decisions and assortment prioritization.
+
+\section{Page 3: Recommendations and Segments}
+\begin{table}[H]
+\centering
+\caption{Top recommendation-rule example (exact validated values).}
+\label{tab:ruleexample}
+\small
+\begin{tabular}{p{3.8cm} p{4.2cm} r r r}
+\toprule
+\textbf{Antecedent} & \textbf{Consequent} & \textbf{Support} & \textbf{Confidence} & \textbf{Lift} \\
+\midrule
+Organic Garlic & Organic Yellow Onion & 0.0073 & 0.2018 & 5.4620 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Seed recommendation output for \texttt{Organic Raspberries}.}
+\label{tab:seedreco}
+\small
+\begin{tabular}{p{4.2cm} p{7.5cm}}
+\toprule
+\textbf{Seed Product} & \textbf{Recommended Products} \\
+\midrule
+Organic Raspberries & Bag of Organic Bananas; Organic Strawberries \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Customer segment profile summary (exact validated values).}
+\label{tab:clusterprofiles}
+\small
+\begin{tabular}{p{1cm} p{4.5cm} p{4.3cm} r}
+\toprule
+\textbf{ID} & \textbf{Profile} & \textbf{Metric} & \textbf{Value} \\
+\midrule
+0 & Frequent loyal shoppers & Avg total orders & 33.28 \\
+0 & Frequent loyal shoppers & Reorder rate & 0.6521 \\
+1 & Light occasional shoppers & Avg total orders & 7.54 \\
+1 & Light occasional shoppers & Avg basket size & 6.63 \\
+2 & Large-basket stock-up shoppers & Avg basket size & 17.12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{13_cluster_k_scores.png}
+\caption{Model-selection evidence across tested \(k\) values for segmentation choice transparency.}
+\label{fig:kscores}
+\end{figure}
+
+\textbf{Explanation:} This page delivers the most actionable outputs. Rule metrics provide product
+affinities, seed recommendations convert affinities into concrete suggestions, and segmentation
+translates user behavior into interpretable audience groups.
+
+\section{Page 4: Execution and Data Quality}
+\begin{table}[H]
+\centering
+\caption{Streaming replay validation summary (exact validated values).}
+\label{tab:streamval}
+\small
+\begin{tabular}{p{6.5cm} r}
+\toprule
+\textbf{Validation Metric} & \textbf{Value} \\
+\midrule
+Checked order-slot groups & 158 \\
+Mismatched groups & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{OLAP validation status (exact validated status).}
+\label{tab:olapval}
+\small
+\begin{tabular}{p{8.5cm} p{4.2cm}}
+\toprule
+\textbf{Check} & \textbf{Result} \\
+\midrule
+Cube totals compared against direct fact-table aggregation & All matched (zero mismatches) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Explanation:} This page is the correctness checkpoint. Stream validation and OLAP validation
+show that analytical summaries are computationally consistent and review-ready.
+
+\section{Page 5: Experimental Insights and Performance}
+\textbf{Exact disclaimer (must remain unchanged):} \\
+Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
+
+\begin{table}[H]
+\centering
+\caption{Exploratory classifier metrics (exact validated values).}
+\label{tab:clfmetrics}
+\small
+\begin{tabular}{p{6.5cm} r}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Accuracy & 0.9136 \\
+AUC & 0.8813 \\
+Majority-baseline accuracy & 0.7445 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Exploratory regression metrics (exact validated values).}
+\label{tab:regmetrics}
+\small
+\begin{tabular}{p{6.5cm} r}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+RMSE & 5.0945 \\
+\(R^2\) & 0.5580 \\
+Mean-baseline RMSE & 7.6627 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{14_classifier_feature_importance.png}
+\caption{Classifier feature-importance output used to interpret the exploratory decision tree behavior.}
+\label{fig:fimportance}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Optimization comparison (exact validated before/after timings).}
+\label{tab:optimize}
+\small
+\begin{tabular}{p{4.8cm} r r r}
+\toprule
+\textbf{Query} & \textbf{Before (s)} & \textbf{After (s)} & \textbf{Delta (s)} \\
+\midrule
+\texttt{department\_hour\_distribution} & 0.6994 & 0.8350 & +0.1356 \\
+\texttt{user\_basket\_summary} & 0.6828 & 0.9789 & +0.2961 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Explanation:} This page intentionally separates exploratory modeling from release-safe KPI
+proof. It keeps both model and optimization evidence visible without overstating operational readiness.
+
+\section{Conclusion}
+This report provides a single-column, presentation-oriented submission artifact that combines
+system diagrams and dashboard evidence with explicit interpretation. The structure is intentionally
+reviewer-friendly: architecture first, then five dashboard pages, then conclusion. The same flow also
+works as a live presentation script.
+
+\end{document}

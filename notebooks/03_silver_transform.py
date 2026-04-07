@@ -2,13 +2,50 @@
 # MAGIC %md
 # MAGIC # Silver Transform
 # MAGIC
-# MAGIC This notebook standardizes types, enriches products with aisle and department metadata, and creates reusable user history aggregates.
+# MAGIC This notebook standardizes types, enriches products with aisle and department metadata, and builds reusable user-history features.
+# MAGIC
+# MAGIC ## Run Inputs
+# MAGIC - `catalog`: optional override for the active catalog
+# MAGIC - `schema`: schema that contains bronze and silver tables
+# MAGIC
+# MAGIC ## Source Tables
+# MAGIC - `bronze_orders`
+# MAGIC - `bronze_order_products_prior`
+# MAGIC - `bronze_order_products_train`
+# MAGIC - `bronze_products`
+# MAGIC - `bronze_aisles`
+# MAGIC - `bronze_departments`
+# MAGIC
+# MAGIC ## Output Tables
+# MAGIC - `silver_orders`
+# MAGIC - `silver_order_items`
+# MAGIC - `silver_products_enriched`
+# MAGIC - `silver_user_history`
+# MAGIC
+# MAGIC ## Workflow
+# MAGIC 1. Load the bronze tables.
+# MAGIC 2. Standardize order records and enrich product lookups.
+# MAGIC 3. Merge prior and train item rows into one consistent item grain.
+# MAGIC 4. Aggregate order-level and user-level history features.
+# MAGIC 5. Persist the silver tables and validate basic row-count and null-key checks.
 
 # COMMAND ----------
-from pyspark.sql import Window, functions as F
+# MAGIC %md
+# MAGIC ## Capture Runtime Inputs
+# MAGIC
+# MAGIC Silver is the cleanup layer, so this notebook focuses on standard types and reusable joins rather than business-facing analytics.
+
+# COMMAND ----------
+from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
 dbutils.widgets.text("schema", "retailpulse")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Resolve Catalog Context And Load Bronze Tables
+# MAGIC
+# MAGIC Keeping table lookup in one cell makes the notebook easier to retarget to a different catalog or schema later.
 
 # COMMAND ----------
 catalog = dbutils.widgets.get("catalog") or spark.sql("SELECT current_catalog()").first()[0]
@@ -26,6 +63,13 @@ products = spark.table(qname("bronze_products"))
 aisles = spark.table(qname("bronze_aisles"))
 departments = spark.table(qname("bronze_departments"))
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Standardize Orders And Enrich Product Lookups
+# MAGIC
+# MAGIC The first pass normalizes key types, trims text, and builds one enriched product dimension candidate for downstream joins.
+
+# COMMAND ----------
 silver_orders = (
     orders.select(
         F.col("order_id").cast("int"),
@@ -47,6 +91,14 @@ silver_products_enriched = (
     .dropDuplicates(["product_id"])
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Build The Unified Order-Item Grain
+# MAGIC
+# MAGIC Prior and train rows are combined before any later marts are built so downstream notebooks can work from one consistent order-item table.
+
+# COMMAND ----------
+# Preserve the source split so downstream debugging can still distinguish where a row originated.
 order_items_union = prior.withColumn("source_split", F.lit("prior")).unionByName(
     train.withColumn("source_split", F.lit("train"))
 )
@@ -79,6 +131,13 @@ silver_order_items = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Aggregate Order And User History
+# MAGIC
+# MAGIC These reusable history features support later gold marts, segmentation, and exploratory predictive analysis.
+
+# COMMAND ----------
 order_level_history = (
     silver_order_items.groupBy("order_id", "user_id")
     .agg(
@@ -102,6 +161,13 @@ silver_user_history = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Persist Silver Tables
+# MAGIC
+# MAGIC The silver layer is the handoff point for the star schema and all later analytics notebooks.
+
+# COMMAND ----------
 for table_name, frame in {
     "silver_orders": silver_orders,
     "silver_order_items": silver_order_items,
@@ -114,6 +180,12 @@ for table_name, frame in {
         .option("overwriteSchema", "true")
         .saveAsTable(qname(table_name))
     )
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Validate Silver Outputs
+# MAGIC
+# MAGIC Focus on row counts and null-key checks here. Richer analytical validation happens later once the gold marts are available.
 
 # COMMAND ----------
 validations = [
@@ -132,4 +204,3 @@ validations = [
 ]
 
 display(spark.createDataFrame(validations, ["check_name", "value"]))
-

@@ -44,6 +44,7 @@ These root-level documents are meant to appear as first-class repository docs on
 - Star schema, OLAP report tables, association rules, clustering, streaming validation, and optimize evidence
 - Dashboard V2 with five reviewer-facing pages
 - Notebook fallback via `notebooks/12_report_pack.py`
+- Supplementary predictive and prescriptive deep-dive notebooks for reviewer walkthroughs
 
 ### Validated now
 - Workspace target: Databricks Free Edition serverless
@@ -99,6 +100,8 @@ flowchart LR
     I --> K
     J --> K
     G --> L[12_report_pack.py fallback]
+    I --> M[13_predictive_analysis.py]
+    H --> N[14_prescriptive_analysis.py]
 ```
 
 Assets:
@@ -127,6 +130,8 @@ The live Databricks dashboard is organized into five pages:
 
 That same page order is mirrored in the packaged evidence and the fallback notebook.
 
+For deeper walkthroughs after the five-page story, use `notebooks/13_predictive_analysis.py` for the exploratory predictive lane, `notebooks/14_prescriptive_analysis.py` for the action-oriented recommendation and segmentation lane, and `Docs/dashboard-output-diagrams.md` for the widget-by-widget dashboard explanation.
+
 ## Current Vs Future
 
 ### Current repo truth
@@ -144,6 +149,7 @@ That future system is planned next. It is not already implemented in this reposi
 ### Project story and results
 - [RESULTS-README.md](RESULTS-README.md)
 - [Docs/showcase-summary.md](Docs/showcase-summary.md)
+- [Docs/dashboard-output-diagrams.md](Docs/dashboard-output-diagrams.md)
 - [Docs/boss-brief.md](Docs/boss-brief.md)
 
 ### Running and adapting the workflow
@@ -163,3 +169,4 @@ That future system is planned next. It is not already implemented in this reposi
 - Dashboard V2 is implemented and validated now.
 - The generic self-service uploader and mapper are planned next.
 - The supervised ML outputs are exploratory and are not operational decision drivers in the current release.
+

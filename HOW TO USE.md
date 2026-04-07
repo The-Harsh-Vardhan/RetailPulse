@@ -22,6 +22,7 @@ This guide explains how to rerun the current RetailPulse workflow, how to adapt 
 - Databricks bundle validate, deploy, and run flow
 - Manual raw CSV upload into the expected Databricks volume
 - Full end-to-end notebook sequence with Dashboard V2 and report-pack fallback
+- Supplementary predictive and prescriptive deep-dive notebooks after the main report pack
 - Optional local tooling container through `Dockerfile.quickstart`
 
 ### Validated now
@@ -70,6 +71,7 @@ flowchart LR
     D --> E[Run retailpulse_full_rebuild]
     E --> F[Review Dashboard V2]
     E --> G[Fallback notebook 12_report_pack.py]
+    E --> H[Deep dives 13_predictive_analysis and 14_prescriptive_analysis]
 ```
 
 ## How To Rerun On Instacart
@@ -156,8 +158,11 @@ Use this order:
 
 1. `RetailPulse Demo Dashboard`
 2. `notebooks/12_report_pack.py`
-3. `assets/screenshots/`
-4. `Docs/current-production-state.md`
+3. `notebooks/13_predictive_analysis.py`
+4. `notebooks/14_prescriptive_analysis.py`
+5. `Docs/dashboard-output-diagrams.md`
+6. `assets/screenshots/`
+7. `Docs/current-production-state.md`
 
 ## Optional Docker Quickstart
 
@@ -233,13 +238,15 @@ Clone repo
 -> upload sampled CSVs manually
 -> bundle run retailpulse_full_rebuild
 -> review Dashboard V2
--> use 12_report_pack.py only as fallback
+-> use 12_report_pack.py only as fallback -> review 13_predictive_analysis.py and 14_prescriptive_analysis.py for deeper interpretation
 ```
 
 ## More Detailed Docs
 
 - [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
 - [Docs/rebuild-from-scratch.md](Docs/rebuild-from-scratch.md)
+- [Docs/dashboard-output-diagrams.md](Docs/dashboard-output-diagrams.md)
 - [Docs/current-production-state.md](Docs/current-production-state.md)
 - [Docs/production-runbook.md](Docs/production-runbook.md)
 - [Docs/release-checklist.md](Docs/release-checklist.md)
+

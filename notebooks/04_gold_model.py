@@ -2,13 +2,51 @@
 # MAGIC %md
 # MAGIC # Gold Model
 # MAGIC
-# MAGIC This notebook builds the star schema tables and the reusable user feature mart used by the analytics notebooks.
+# MAGIC This notebook builds the star schema and the reusable user-feature mart that later analytics notebooks consume.
+# MAGIC
+# MAGIC ## Run Inputs
+# MAGIC - `catalog`: optional override for the active catalog
+# MAGIC - `schema`: schema that contains silver and gold tables
+# MAGIC
+# MAGIC ## Source Tables
+# MAGIC - `silver_orders`
+# MAGIC - `silver_order_items`
+# MAGIC - `silver_products_enriched`
+# MAGIC - `silver_user_history`
+# MAGIC
+# MAGIC ## Output Tables
+# MAGIC - `dim_user`
+# MAGIC - `dim_product`
+# MAGIC - `dim_aisle`
+# MAGIC - `dim_department`
+# MAGIC - `dim_order_slot`
+# MAGIC - `fact_order_items`
+# MAGIC - `fact_orders`
+# MAGIC - `mart_user_features`
+# MAGIC
+# MAGIC ## Workflow
+# MAGIC 1. Load the silver tables.
+# MAGIC 2. Build warehouse-style dimensions and facts.
+# MAGIC 3. Derive the reusable user-feature mart for clustering and exploratory ML.
+# MAGIC 4. Persist the gold tables and run basic contract checks.
 
 # COMMAND ----------
-from pyspark.sql import Window, functions as F
+# MAGIC %md
+# MAGIC ## Capture Runtime Inputs
+# MAGIC
+# MAGIC Gold is the stable analytical handoff layer, so every downstream notebook expects these tables to exist with the same names.
+
+# COMMAND ----------
+from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
 dbutils.widgets.text("schema", "retailpulse")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Resolve Catalog Context And Load Silver Tables
+# MAGIC
+# MAGIC The helper keeps all writes fully qualified so the bundle job can target alternate catalogs without editing notebook logic.
 
 # COMMAND ----------
 catalog = dbutils.widgets.get("catalog") or spark.sql("SELECT current_catalog()").first()[0]
@@ -24,6 +62,13 @@ silver_order_items = spark.table(qname("silver_order_items"))
 silver_products_enriched = spark.table(qname("silver_products_enriched"))
 silver_user_history = spark.table(qname("silver_user_history"))
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Build Dimensions
+# MAGIC
+# MAGIC The dimensions keep descriptive attributes separated from the two fact tables and add a reusable daypart lookup.
+
+# COMMAND ----------
 dim_user = silver_user_history.select(
     "user_id",
     "total_orders",
@@ -47,6 +92,7 @@ dim_department = silver_products_enriched.select(
     "department_id", "department"
 ).dropDuplicates(["department_id"])
 
+# Keep the daypart mapping explicit so dashboard-facing timing logic is easy to review.
 dim_order_slot = (
     silver_orders.select("order_dow", "order_hour_of_day")
     .dropDuplicates()
@@ -60,6 +106,13 @@ dim_order_slot = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Build Facts
+# MAGIC
+# MAGIC `fact_order_items` preserves the item grain, while `fact_orders` summarizes each order for later basket and timing analysis.
+
+# COMMAND ----------
 fact_order_items = silver_order_items.select(
     "order_id",
     "user_id",
@@ -93,6 +146,13 @@ fact_orders = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Build The Reusable User Feature Mart
+# MAGIC
+# MAGIC This mart mirrors the user-level signals that later clustering and exploratory predictive notebooks expect. It intentionally keeps the current methodology stable for this release.
+
+# COMMAND ----------
 base_user_features = (
     fact_orders.groupBy("user_id")
     .agg(
@@ -109,6 +169,7 @@ base_user_features = (
     )
 )
 
+# Merge the fact-derived features with the silver history snapshot so downstream notebooks always find a complete user row.
 mart_user_features = (
     base_user_features.join(
         dim_user.select(
@@ -148,6 +209,13 @@ mart_user_features = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Persist Gold Tables
+# MAGIC
+# MAGIC These tables form the durable analytical contract for OLAP, recommendation, clustering, streaming validation, and the two supplementary deep-dive notebooks.
+
+# COMMAND ----------
 for table_name, frame in {
     "dim_user": dim_user,
     "dim_product": dim_product,
@@ -164,6 +232,12 @@ for table_name, frame in {
         .option("overwriteSchema", "true")
         .saveAsTable(qname(table_name))
     )
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Validate Gold Outputs
+# MAGIC
+# MAGIC These checks focus on row presence and core key integrity. Richer business validation is deferred to the later report tables.
 
 # COMMAND ----------
 checks = [

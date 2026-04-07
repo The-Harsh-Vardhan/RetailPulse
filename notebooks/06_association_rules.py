@@ -2,7 +2,35 @@
 # MAGIC %md
 # MAGIC # Association Rules
 # MAGIC
-# MAGIC This notebook derives serverless-safe pairwise association rules from order baskets and persists the resulting rules to `mart_association_rules`.
+# MAGIC This notebook derives serverless-safe pairwise association rules from order baskets and persists them to `mart_association_rules`.
+# MAGIC
+# MAGIC ## Run Inputs
+# MAGIC - `catalog`: optional override for the active catalog
+# MAGIC - `schema`: schema that contains the gold marts
+# MAGIC - `min_support`: minimum support threshold for a rule to survive
+# MAGIC - `min_confidence`: minimum confidence threshold for a rule to survive
+# MAGIC - `seed_products`: comma-separated product ids used for a recommendation example
+# MAGIC
+# MAGIC ## Source Tables
+# MAGIC - `fact_order_items`
+# MAGIC - `dim_product`
+# MAGIC
+# MAGIC ## Output Tables And Artifacts
+# MAGIC - `mart_association_rules`
+# MAGIC - A top-rules preview
+# MAGIC - A seed-product recommendation preview
+# MAGIC
+# MAGIC ## Workflow
+# MAGIC 1. Build basket-level item sets from the fact table.
+# MAGIC 2. Count pairwise co-occurrences and derive support, confidence, and lift.
+# MAGIC 3. Persist the surviving rules.
+# MAGIC 4. Show a recommendation example for the configured seed products.
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Capture Runtime Inputs
+# MAGIC
+# MAGIC The thresholds stay as widgets so you can tighten or relax the recommendation evidence without editing notebook code.
 
 # COMMAND ----------
 from pyspark.sql import functions as F
@@ -12,6 +40,12 @@ dbutils.widgets.text("schema", "retailpulse")
 dbutils.widgets.text("min_support", "0.005")
 dbutils.widgets.text("min_confidence", "0.2")
 dbutils.widgets.text("seed_products", "24852,13176")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Resolve Context And Load Gold Tables
+# MAGIC
+# MAGIC The seed product list is parsed once here so the later recommendation preview can stay purely DataFrame-based.
 
 # COMMAND ----------
 catalog = dbutils.widgets.get("catalog") or spark.sql("SELECT current_catalog()").first()[0]
@@ -32,6 +66,13 @@ def qname(name: str) -> str:
 fact_order_items = spark.table(qname("fact_order_items"))
 dim_product = spark.table(qname("dim_product"))
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Build Basket-Level Pairs
+# MAGIC
+# MAGIC Pairwise rules are more conservative than full FP-growth, but they are reliable on the current Databricks Free Edition serverless target.
+
+# COMMAND ----------
 baskets = (
     fact_order_items.groupBy("order_id")
     .agg(F.collect_set("product_id").alias("items"))
@@ -53,6 +94,13 @@ consequent_counts = basket_items.groupBy("product_id").agg(
     F.count("*").alias("consequent_order_count")
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Derive Rule Metrics
+# MAGIC
+# MAGIC The self-join enumerates product pairs inside the same basket, then derives support, confidence, and lift from the pair counts.
+
+# COMMAND ----------
 rules = (
     basket_items.alias("left")
     .join(basket_items.alias("right"), "order_id")
@@ -102,6 +150,13 @@ rules = (
     )
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Persist And Review The Rule Table
+# MAGIC
+# MAGIC The persisted mart is the reusable recommendation surface. Later notebooks should read it instead of recalculating rules.
+
+# COMMAND ----------
 (
     rules.write.format("delta")
     .mode("overwrite")
@@ -110,6 +165,12 @@ rules = (
 )
 
 display(rules.orderBy(F.desc("lift"), F.desc("confidence")).limit(10))
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Seed Recommendation Example
+# MAGIC
+# MAGIC This is a presentation convenience: it shows how the rule table can be turned into candidate next-best products for a chosen seed basket.
 
 # COMMAND ----------
 seed_array = F.array(*[F.lit(product_id) for product_id in seed_products])
@@ -136,3 +197,9 @@ recommendations = (
 )
 
 display(recommendations)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Interpretation Note
+# MAGIC
+# MAGIC The strongest rules are useful prescriptive evidence because they combine co-occurrence frequency with directional strength. Treat support, confidence, and lift together rather than relying on any single metric.

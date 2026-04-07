@@ -1,0 +1,287 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{placeins}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+% Overleaf image path requested by user.
+\graphicspath{{./Figures/}}
+
+\title{RetailPulse Submission Report (Single-Column)\\
+\large Dashboard and Diagram Walkthrough for Submission and Presentation}
+\author{Team RetailPulse}
+\date{April 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This single-column report is the presentation-ready submission narrative for RetailPulse.
+It combines architecture diagrams with dashboard outputs and explains what each visual proves.
+The report follows the validated five-page dashboard story: Executive Overview, Order Behavior,
+Recommendations and Segments, Execution and Data Quality, and Experimental Insights and
+Performance. All dashboard figures are referenced using Overleaf-friendly paths under
+\texttt{./Figures/image\_name}.
+\end{abstract}
+
+\section{Purpose and Submission Scope}
+This document is designed for two use cases: (1) submission review and (2) presentation flow.
+Instead of only showing screenshots, each figure includes interpretation and evidence context.
+The dashboard is the primary review surface, while the notebook report pack remains the fallback.
+
+\subsection{Validated Context}
+The evidence corresponds to the validated Databricks run and Dashboard V2 packaging used in the
+RetailPulse repository. The goal is to prove that the pipeline is populated, analytics outputs are
+interpretable, and validation checks are reviewable.
+
+\section{System Diagrams and Architecture Explanation}
+This section explains how data moves from raw files to dashboard-ready evidence. These diagrams are
+included to make the implementation logic understandable before reviewing the output screenshots.
+
+\subsection{End-to-End Workflow Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm and 0.8cm,
+    box/.style={draw, rounded corners, align=center, minimum width=2.65cm, minimum height=0.95cm, fill=blue!4},
+    stage/.style={draw, rounded corners, align=center, minimum width=2.65cm, minimum height=0.95cm, fill=green!6},
+    out/.style={draw, rounded corners, align=center, minimum width=2.65cm, minimum height=0.95cm, fill=orange!8},
+    arr/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[box] (sample) {Local Sampling\\\texttt{sample\_instacart.py}};
+\node[box, right=of sample] (upload) {Upload to UC\\Raw Volume};
+\node[stage, right=of upload] (bronze) {Bronze Ingest\\\texttt{02\_bronze\_ingest.py}};
+\node[stage, right=of bronze] (silver) {Silver Transform\\\texttt{03\_silver\_transform.py}};
+\node[stage, right=of silver] (gold) {Gold Model\\\texttt{04\_gold\_model.py}};
+
+\node[out, below=of bronze] (olap) {OLAP\\\texttt{05\_olap.py}};
+\node[out, below=of silver] (rules) {Rules/Segments\\\texttt{06--07}};
+\node[out, below=of gold] (ops) {Streaming + Optimize\\\texttt{10--11}};
+\node[out, below=of rules] (report) {Report Pack\\\texttt{12\_report\_pack.py}};
+\node[out, right=of report] (dash) {AI/BI Dashboard\\V2};
+
+\draw[arr] (sample) -- (upload);
+\draw[arr] (upload) -- (bronze);
+\draw[arr] (bronze) -- (silver);
+\draw[arr] (silver) -- (gold);
+
+\draw[arr] (gold) |- (olap);
+\draw[arr] (gold) -- (rules);
+\draw[arr] (gold) -- (ops);
+\draw[arr] (olap) -- (report);
+\draw[arr] (rules) -- (report);
+\draw[arr] (ops) -- (report);
+\draw[arr] (report) -- (dash);
+\end{tikzpicture}
+\caption{RetailPulse end-to-end flow from sampling and medallion pipeline to report pack and dashboard output surfaces.}
+\label{fig:endtoend}
+\end{figure}
+
+\textbf{Explanation:} Figure~\ref{fig:endtoend} shows the controlled progression from raw data to
+review artifacts. The key submission value is that dashboard visuals are downstream of persisted
+warehouse outputs, not ad hoc notebook cells.
+
+\subsection{Gold-Layer Star Model Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm and 1.25cm,
+    dim/.style={draw, rounded corners, align=center, minimum width=2.8cm, minimum height=0.85cm, fill=purple!6},
+    fact/.style={draw, rounded corners, align=center, minimum width=2.9cm, minimum height=0.95cm, fill=teal!8},
+    arr/.style={-{Stealth[length=2mm]}, thick}
+]
+\node[dim] (du) {dim\_user};
+\node[dim, below=of du] (dp) {dim\_product};
+\node[dim, below=of dp] (dd) {dim\_department};
+\node[dim, below=of dd] (ds) {dim\_order\_slot};
+
+\node[fact, right=of dp] (foi) {fact\_order\_items};
+\node[fact, above=of foi] (fo) {fact\_orders};
+\node[fact, below=of foi] (muf) {mart\_user\_features};
+
+\draw[arr] (du.east) -- (fo.west);
+\draw[arr] (du.east) -- (foi.west);
+\draw[arr] (dp.east) -- (foi.west);
+\draw[arr] (dd.east) -- (foi.west);
+\draw[arr] (ds.east) -- (fo.east);
+\draw[arr] (ds.east) -- (foi.east);
+\draw[arr] (fo.south) -- (muf.north);
+\end{tikzpicture}
+\caption{Simplified gold-layer model used for OLAP, recommendation mining, segmentation, and validation outputs.}
+\label{fig:starmodel}
+\end{figure}
+
+\textbf{Explanation:} Figure~\ref{fig:starmodel} clarifies why the dashboard pages can stay
+consistent: most widgets are derived from stable facts/dimensions and report tables built on top of
+this model.
+
+\section{Dashboard Structure and Evidence Mapping}
+The dashboard is organized into five pages. Each page has a specific analytical role and corresponding
+proof artifacts.
+
+\begin{table}[H]
+\centering
+\caption{Dashboard page map used in this report.}
+\label{tab:pagemap}
+\begin{tabularx}{\textwidth}{p{0.75cm} p{3.2cm} X}
+\toprule
+\textbf{Page} & \textbf{Name} & \textbf{What it proves} \\
+\midrule
+1 & Executive Overview & Core table population and high-level order behavior are visible quickly. \\
+2 & Order Behavior & Basket size and demand variation are interpretable by time and product. \\
+3 & Recommendations and Segments & Cross-sell rules and customer groups are actionable and explainable. \\
+4 & Execution and Data Quality & Streaming replay and OLAP checks validate correctness. \\
+5 & Experimental Insights and Performance & Exploratory ML and optimization evidence are available with proper caution. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Page 1: Executive Overview}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{01_run_success.png}
+\caption{Run-success evidence showing the validated Databricks job completion.}
+\label{fig:runsuccess}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{02_report_pack_counts.png}
+\caption{KPI and core table-count evidence used as a quality gate for pipeline population.}
+\label{fig:counts}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{10_orders_by_day.png}
+\caption{Orders-by-day trend used to summarize weekly demand rhythm and basket movement.}
+\label{fig:ordersday}
+\end{figure}
+
+\textbf{Explanation:} This page answers the first reviewer question: \emph{did the pipeline run and
+produce meaningful tables?} The run-success artifact confirms execution, KPI/table counts confirm
+non-empty warehouse layers, and orders-by-day gives immediate behavioral readability.
+
+\section{Page 2: Order Behavior}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{03_olap_outputs.png}
+\caption{Department demand and timing-pattern OLAP visualizations for category-level behavior analysis.}
+\label{fig:olap}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{11_top_products.png}
+\caption{Top-products and basket behavior evidence for demand concentration and mission-size interpretation.}
+\label{fig:topproducts}
+\end{figure}
+
+\textbf{Explanation:} Page 2 explains \emph{how} customers buy: by daypart, hour, department, and
+product rank. Together, these visuals support timing decisions and assortment prioritization.
+
+\section{Page 3: Recommendations and Segments}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{04_association_rules.png}
+\caption{Top recommendation rules with support, confidence, and lift for cross-sell evidence.}
+\label{fig:rules}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{12_seed_recommendations.png}
+\caption{Seed-product recommendation output for practical next-best-item interpretation.}
+\label{fig:seedreco}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{05_cluster_profiles.png}
+\caption{Cluster profiles and segment-size context for customer strategy planning.}
+\label{fig:clusters}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{13_cluster_k_scores.png}
+\caption{Model-selection evidence across tested \(k\) values to justify the selected segmentation granularity.}
+\label{fig:kscores}
+\end{figure}
+
+\textbf{Explanation:} This page delivers the most actionable outputs. Association rules provide
+product affinities, seed recommendations convert affinities into concrete suggestions, and segmentation
+translates user behavior into interpretable audience groups.
+
+\section{Page 4: Execution and Data Quality}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{08_stream_validation.png}
+\caption{Streaming health and validation detail, used to compare replay-stream aggregates against batch expectations.}
+\label{fig:stream}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{15_olap_validation.png}
+\caption{OLAP validation summary/detail confirming grouped cube results against direct aggregation checks.}
+\label{fig:olapval}
+\end{figure}
+
+\textbf{Explanation:} This page is the correctness checkpoint. Stream validation and OLAP validation
+show that analytical summaries are not only visually appealing, but also computationally consistent.
+
+\section{Page 5: Experimental Insights and Performance}
+\textbf{Exact disclaimer (must remain unchanged):} \\
+Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{06_classifier_metrics.png}
+\caption{Exploratory classifier metrics used for discussion, not release-safe proof.}
+\label{fig:clfmetrics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{07_regression_metrics.png}
+\caption{Exploratory regression metrics used to assess predictive direction under current feature design.}
+\label{fig:regmetrics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{14_classifier_feature_importance.png}
+\caption{Feature-importance view to improve interpretability of the exploratory classification lane.}
+\label{fig:fimportance}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{09_optimize_summary.png}
+\caption{Before-versus-after optimization comparison for benchmarked query timings.}
+\label{fig:optimize}
+\end{figure}
+
+\textbf{Explanation:} This page intentionally separates experimental modeling from release-safe KPI
+proof. It preserves transparency by showing both model metrics and optimization outcomes without
+overstating operational readiness.
+
+\section{Conclusion}
+This report provides a single-column, presentation-oriented submission artifact that combines
+system diagrams and dashboard evidence with explicit interpretation. The structure is intentionally
+reviewer-friendly: architecture first, then five dashboard pages, then conclusion. The same flow also
+works as a live presentation script.
+
+\paragraph{Overleaf note.}
+Ensure the figure files listed in this report are available under \texttt{./Figures/} in the
+Overleaf project (for example, \texttt{./Figures/01\_run\_success.png},
+\texttt{./Figures/02\_report\_pack\_counts.png}, ..., \texttt{./Figures/15\_olap\_validation.png}).
+
+\end{document}

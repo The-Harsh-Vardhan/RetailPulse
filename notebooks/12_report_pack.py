@@ -2,7 +2,39 @@
 # MAGIC %md
 # MAGIC # Report Pack
 # MAGIC
-# MAGIC This notebook assembles the final evidence tables used in the written report, GitHub showcase, and Dashboard V2 fallback flow.
+# MAGIC This notebook is the notebook fallback for Dashboard V2 and the main evidence hub for the repo-tracked outputs.
+# MAGIC
+# MAGIC ## Run Inputs
+# MAGIC - `catalog`: optional override for the active catalog
+# MAGIC - `schema`: schema that contains the RetailPulse report tables
+# MAGIC
+# MAGIC ## Source Tables
+# MAGIC - `dim_product`
+# MAGIC - `fact_orders`
+# MAGIC - `fact_order_items`
+# MAGIC - `mart_association_rules`
+# MAGIC - `report_cluster_profiles`
+# MAGIC - `report_cluster_k_scores`
+# MAGIC - `report_olap_cube`
+# MAGIC - `report_olap_rollup`
+# MAGIC - `report_olap_basket`
+# MAGIC - `report_olap_validation`
+# MAGIC - `report_stream_validation`
+# MAGIC - `report_classifier_metrics`
+# MAGIC - `report_regression_metrics`
+# MAGIC - `report_classifier_feature_importance`
+# MAGIC - `report_optimize_summary`
+# MAGIC - `report_optimize_timings`
+# MAGIC
+# MAGIC ## Outputs
+# MAGIC - A five-section notebook view that mirrors Dashboard V2
+# MAGIC - Readable fallback displays for the review package and screenshot workflow
+# MAGIC
+# MAGIC ## Workflow
+# MAGIC 1. Resolve the active catalog and schema.
+# MAGIC 2. Build shared display DataFrames used across the five sections.
+# MAGIC 3. Render the same five-section story as Dashboard V2.
+# MAGIC 4. Keep the exploratory-model disclaimer visible only in the experimental section.
 
 # COMMAND ----------
 # MAGIC %md
@@ -20,10 +52,22 @@
 # MAGIC Classifier and regression results are exploratory and useful for demo discussion, but not final predictive proof. Methodology tightening is still pending.
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC ## Capture Runtime Inputs
+# MAGIC
+# MAGIC This notebook is intentionally read-heavy. It packages already-persisted report tables instead of creating new warehouse state.
+
+# COMMAND ----------
 from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
 dbutils.widgets.text("schema", "retailpulse")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Resolve Context And Load Shared Inputs
+# MAGIC
+# MAGIC The helper and shared lookup tables are reused across multiple dashboard-style sections below.
 
 # COMMAND ----------
 catalog = dbutils.widgets.get("catalog") or spark.sql("SELECT current_catalog()").first()[0]
@@ -35,6 +79,8 @@ def qname(name: str) -> str:
 
 
 dim_product = spark.table(qname("dim_product"))
+
+# Keep the day-of-week label mapping explicit so the display order stays interpretable in screenshots.
 day_name = (
     F.when(F.col("order_dow") == 0, "Sun")
     .when(F.col("order_dow") == 1, "Mon")
@@ -45,6 +91,13 @@ day_name = (
     .when(F.col("order_dow") == 6, "Sat")
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Assemble Shared Display DataFrames
+# MAGIC
+# MAGIC These DataFrames mirror the dashboard widgets closely so the fallback notebook tells the same story without recomputing the underlying marts.
+
+# COMMAND ----------
 table_counts = spark.createDataFrame(
     [
         ("bronze_orders", spark.table(qname("bronze_orders")).count()),
@@ -181,6 +234,8 @@ olap_validation_summary = (
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 1. Executive Overview
+# MAGIC
+# MAGIC Start with coverage and confidence: table counts, order-day pattern, and the persisted OLAP views.
 
 # COMMAND ----------
 display(table_counts)
@@ -191,6 +246,8 @@ display(spark.table(qname("report_olap_rollup")).orderBy("order_dow", "order_hou
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 2. Order Behavior
+# MAGIC
+# MAGIC This section focuses on shopping-pattern shape: basket size by daypart and hour, plus the most frequently seen products.
 
 # COMMAND ----------
 display(spark.table(qname("report_olap_basket")).orderBy("daypart", "department_id"))
@@ -200,6 +257,8 @@ display(top_products)
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 3. Recommendations And Segments
+# MAGIC
+# MAGIC Keep recommendation proof and customer segmentation together because they are the strongest action-oriented outputs in the current release.
 
 # COMMAND ----------
 display(top_rules)
@@ -211,6 +270,8 @@ display(spark.table(qname("report_cluster_k_scores")).orderBy("cluster_k"))
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 4. Execution And Data Quality
+# MAGIC
+# MAGIC This section shows whether the descriptive and streaming layers are trustworthy enough for a live review.
 
 # COMMAND ----------
 display(olap_validation_summary)
@@ -229,6 +290,12 @@ display(spark.table(qname("report_regression_metrics")))
 display(spark.table(qname("report_classifier_feature_importance")).orderBy(F.desc("importance")))
 display(spark.table(qname("report_optimize_summary")).orderBy("query_name"))
 display(spark.table(qname("report_optimize_timings")).orderBy("query_name", "run_stage"))
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Capture Checklist
+# MAGIC
+# MAGIC Use this closing table when you are collecting screenshots or walking an evaluator through the fallback notebook.
 
 # COMMAND ----------
 report_outline = [

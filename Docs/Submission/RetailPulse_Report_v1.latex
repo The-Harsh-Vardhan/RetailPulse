@@ -1,0 +1,471 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric}
+
+\graphicspath{{../../assets/screenshots/}{../../assets/brand/}}
+
+\begin{document}
+
+\title{RetailPulse: Grocery Order Analytics, Recommendation, and Dashboarding on Databricks}
+
+\author{
+\IEEEauthorblockN{
+Student Name 1,
+Student Name 2,
+Student Name 3,
+Student Name 4
+}
+\IEEEauthorblockA{
+Department of Computer Science and Engineering\\
+Institute Name Placeholder\\
+Emails: student1@example.com, student2@example.com, student3@example.com, student4@example.com
+}
+}
+
+\maketitle
+
+\begin{abstract}
+RetailPulse is a Databricks-first retail analytics project built around a validated Instacart implementation. The project takes grocery order history through a bronze, silver, and gold Delta Lake pipeline, persists OLAP and report tables, derives cross-sell recommendations and customer segments, validates a replay-style streaming flow, and publishes a five-page Databricks AI/BI dashboard for review. This report documents the submission-safe version of the system validated on April 5, 2026 through Databricks job \texttt{61936309152043} and successful run \texttt{631388168060027}. The report intentionally stays honest about the source data and platform: the Instacart dataset does not contain raw prices or absolute calendar dates, the current workspace target is Databricks Free Edition serverless, and the classifier and regression outputs remain exploratory rather than operational proof. Within those constraints, RetailPulse demonstrates a coherent warehouse-style analytics system with reproducible orchestration, reusable report tables, clear evidence packaging, and a dashboard surface aligned with the notebook pipeline.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Databricks, Delta Lake, retail analytics, Instacart, medallion architecture, association rules, clustering, streaming validation, dashboarding.
+\end{IEEEkeywords}
+
+\section*{1. Problem Statement}
+Retail analytics projects often fail in one of two ways. They either stop at raw exploratory notebooks with no reproducible data model, or they overclaim business insight from weakly packaged analytics that cannot be rerun, validated, or reviewed by another engineer. The goal of RetailPulse was to avoid both failures by building a small but defensible retail analytics system around public grocery order history. The system needed to ingest data into Databricks, standardize it into a lakehouse pipeline, expose warehouse-style analytics outputs, demonstrate recommendation and segmentation capabilities, validate its own outputs, and present the results through a dashboard and evidence pack instead of isolated notebook screenshots.
+
+The project scope was intentionally grounded in the actual capabilities of the Instacart dataset and the target platform. Instacart is well suited to basket analytics, reorder behavior, association rules, and customer segmentation because it provides order-item level history with user, product, aisle, and department information. However, it does not provide raw prices or absolute dates, so the system could not honestly claim revenue analytics or month-over-month sales reporting. Likewise, Databricks Free Edition serverless is capable enough to support Delta pipelines, SQL analytics, Structured Streaming with \texttt{AvailableNow}, and AI/BI dashboards, but it imposes practical limits that require conservative implementation choices \cite{databricks_free, databricks_streaming}. RetailPulse therefore frames the problem as grocery order analytics and recommendation on Databricks, not as a full production commerce platform.
+
+The final problem statement can be expressed in operational terms: given public order-item data, build a reproducible Databricks workflow that transforms raw CSVs into validated analytics tables, produces reviewable descriptive and exploratory outputs, and presents them through a consistent dashboard and report-pack story. The report evaluates whether that goal was met using the repo-tracked workflow, the persisted tables, the screenshot pack, and the validated live run metadata.
+
+\subsection*{1.5 Why Databricks?}
+Databricks was chosen because the project needed one surface that could support ingestion, transformation, storage, analytics, orchestration, and presentation without forcing the submission into disconnected tools. Delta tables and Unity Catalog volumes provide a straightforward way to structure the bronze, silver, and gold layers. Databricks Asset Bundles provide a reproducible deployment model for the notebook workflow. Databricks SQL and AI/BI dashboards provide a reviewer-friendly output surface that is stronger than asking an evaluator to inspect raw notebooks. These capabilities make Databricks a good fit for a course project whose value depends not only on algorithms, but also on packaging, repeatability, and clarity \cite{delta_medallion, databricks_bundles, databricks_dashboards}.
+
+Databricks also imposed design discipline. Because the target environment was Free Edition serverless, the project had to avoid assumptions that only work on larger or stateful clusters. This directly influenced several implementation decisions: sampling is done locally rather than by fetching Kaggle data in notebooks; recommendation mining uses a serverless-safe pairwise approach rather than FP-growth; streaming validation uses \texttt{Trigger.AvailableNow}; and the final performance section documents that \texttt{OPTIMIZE} did not improve the benchmark queries on the small sample. These constraints helped keep the final project honest and reproducible rather than artificially polished.
+
+\section*{2. Our Deliverables}
+RetailPulse was packaged as a complete submission set rather than a notebook-only demo. The final deliverables span the data pipeline, analytics outputs, orchestration, dashboard surface, and written evidence.
+
+\begin{table*}[t]
+\centering
+\caption{Core RetailPulse deliverables in the validated submission state.}
+\label{tab:deliverables}
+\small
+\begin{tabularx}{\textwidth}{p{2.2cm} p{4.3cm} X}
+\toprule
+\textbf{Area} & \textbf{Artifact} & \textbf{Submission value} \\
+\midrule
+Pipeline & \texttt{00\_setup.py} to \texttt{04\_gold\_model.py} & Establishes the lakehouse pipeline from raw CSVs to reusable facts, dimensions, and feature marts. \\
+Analytics & \texttt{05\_olap.py} to \texttt{11\_optimize.py} & Produces OLAP summaries, recommendation rules, customer segments, exploratory predictive metrics, streaming validation, and optimization evidence. \\
+Report hub & \texttt{12\_report\_pack.py} & Acts as the notebook fallback for the five-page dashboard story and exposes the persisted evidence tables in one place. \\
+Orchestration & \texttt{databricks.yml} and \texttt{resources/retailpulse\_job\_resource.yml} & Defines the sequential Databricks Asset Bundle job \texttt{retailpulse\_full\_rebuild}. \\
+Dashboard & Databricks AI/BI dashboard ``RetailPulse Demo Dashboard'' & Provides the primary live-demo and review surface with five sections aligned to the report-pack notebook. \\
+Evidence & \texttt{assets/screenshots/01--15} and persisted report tables & Converts notebook outputs into reusable proof for the written report, GitHub review, and live demo. \\
+Documentation & \texttt{README.md}, \texttt{RESULTS-README.md}, handbook, audits, specs & Explains the project story, validated results, operating model, limitations, and future system direction. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+At the live-workspace level, the validated run facts are themselves deliverables because they prove that the packaged workflow was executed end to end. The authoritative release record lists Databricks job \texttt{61936309152043}, successful run \texttt{631388168060027}, the published dashboard \texttt{RetailPulse Demo Dashboard}, and dashboard revision timestamp \texttt{2026-04-05T08:40:02.619Z}. The report therefore evaluates a concrete implemented state rather than a planned architecture.
+
+The deliverables also include a strict narrative structure. Dashboard V2 and the report-pack notebook share the same five reviewer-facing sections: Executive Overview, Order Behavior, Recommendations and Segments, Execution and Data Quality, Experimental Insights and Performance. This matters because it keeps the report, the dashboard, the notebook fallback, and the screenshot evidence synchronized instead of forcing the reviewer to reconstruct the story from mismatched surfaces.
+
+\section*{3. Dataset and Why We Picked That Dataset}
+RetailPulse uses the public Instacart order-history dataset as its source data \cite{instacart}. This dataset was selected because it offers the right grain for a retail analytics capstone: user-level order sequences, order-item line data, product information, aisles, and departments. Those characteristics support the main analytical questions targeted by the project: Which product combinations recur in baskets? Which customer groups behave similarly? What departments dominate demand by day and hour? How can a warehouse-style data model summarize order behavior cleanly?
+
+The project does not use the entire source dataset directly inside Databricks. Instead, it creates a deterministic \(10\%\) sample locally by keeping users that satisfy the configured sampling rule and then filtering the order-product files to the corresponding \texttt{order\_id} set. That smaller sample is more manageable for Free Edition quotas while remaining large enough to produce meaningful association rules, segments, and report tables. The validated sample sizes are shown in Table~\ref{tab:samplecounts}.
+
+\begin{table}[H]
+\centering
+\caption{Deterministic Instacart sample used by RetailPulse.}
+\label{tab:samplecounts}
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Sample file} & \textbf{Rows} \\
+\midrule
+\texttt{orders.csv} & 341,974 \\
+\texttt{order\_products\_\_prior.csv} & 3,267,191 \\
+\texttt{order\_products\_\_train.csv} & 137,847 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The choice of Instacart was driven by analytic fit rather than convenience alone. Many public retail datasets either lack order-item detail or are too synthetic to support realistic behavior analysis. Instacart preserves the transaction grain needed for medallion modeling, association-rule mining, and customer-feature engineering. It also supports a strong star-schema design because the data naturally separates into orders, users, products, aisles, and departments.
+
+At the same time, the dataset imposes non-negotiable limitations, and those limitations directly shape the report. Instacart does not include raw product prices or revenue, so RetailPulse focuses on item counts, basket size, reorder rate, day-of-week, hour-of-day, and days-since-prior-order. It also does not provide absolute calendar dates, so the project uses \texttt{order\_dow}, \texttt{order\_hour\_of\_day}, and \texttt{days\_since\_prior\_order} rather than fabricated month or year dimensions. This is why the system should be described as grocery order analytics and recommendation, not as sales or calendar analytics.
+
+\section*{4. High Level Workflow Architecture}
+RetailPulse follows a Databricks medallion pipeline and then branches into analytics, validation, and presentation layers. Figure~\ref{fig:endtoend} shows the end-to-end project flow, while Figure~\ref{fig:schemajob} combines the logical warehouse model with the sequential job orchestration.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm and 0.55cm,
+    box/.style={draw, rounded corners, align=center, minimum width=2.5cm, minimum height=0.95cm, fill=blue!6},
+    stage/.style={draw, rounded corners, align=center, minimum width=2.15cm, minimum height=0.95cm, fill=green!8},
+    analytic/.style={draw, rounded corners, align=center, minimum width=2.35cm, minimum height=0.95cm, fill=orange!10},
+    output/.style={draw, rounded corners, align=center, minimum width=2.5cm, minimum height=0.95cm, fill=purple!8},
+    arr/.style={-{Latex[length=2mm]}, thick}
+]
+\node[box] (local) {Local Instacart\\sample builder\\(\texttt{scripts/sample\_instacart.py})};
+\node[box, right=of local] (upload) {Upload sampled CSVs\\to Unity Catalog\\raw volume};
+\node[stage, right=of upload] (bronze) {Bronze tables\\explicit schema\\\texttt{02\_bronze\_ingest.py}};
+\node[stage, right=of bronze] (silver) {Silver tables\\clean + enrich\\\texttt{03\_silver\_transform.py}};
+\node[stage, right=of silver] (gold) {Gold model\\facts, dims, marts\\\texttt{04\_gold\_model.py}};
+
+\node[analytic, below=1.1cm of bronze] (olap) {OLAP\\\texttt{05\_olap.py}};
+\node[analytic, below=1.1cm of silver] (rules) {Association rules\\\texttt{06\_association\_rules.py}};
+\node[analytic, below=1.1cm of gold] (cluster) {Clustering, classifier,\\regression\\\texttt{07--09}};
+\node[analytic, right=of cluster] (stream) {Streaming replay\\and optimize\\\texttt{10--11}};
+
+\node[output, below=1.25cm of rules] (report) {Report pack notebook\\\texttt{12\_report\_pack.py}};
+\node[output, right=of report] (dashboard) {Databricks AI/BI\\Dashboard V2};
+\node[output, left=of report] (evidence) {Screenshot pack\\and written report};
+
+\draw[arr] (local) -- (upload);
+\draw[arr] (upload) -- (bronze);
+\draw[arr] (bronze) -- (silver);
+\draw[arr] (silver) -- (gold);
+
+\draw[arr] (gold) |- (olap);
+\draw[arr] (gold) -- (rules);
+\draw[arr] (gold) -- (cluster);
+\draw[arr] (gold) -- (stream);
+
+\draw[arr] (olap) -- (report);
+\draw[arr] (rules) -- (report);
+\draw[arr] (cluster) -- (report);
+\draw[arr] (stream) -- (report);
+\draw[arr] (report) -- (dashboard);
+\draw[arr] (report) -- (evidence);
+\draw[arr] (dashboard) -- (evidence);
+\end{tikzpicture}
+\caption{End-to-end RetailPulse workflow. Sampling is performed locally, ingestion lands in Unity Catalog volumes, bronze-silver-gold layers are persisted as Delta tables, analytics notebooks generate report tables and marts, and the final outputs are exposed through Dashboard V2 and the report-pack notebook.}
+\label{fig:endtoend}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.6cm,
+    schema/.style={draw, rounded corners, minimum width=2.55cm, minimum height=0.82cm, align=center, fill=teal!8},
+    job/.style={draw, rounded corners, minimum width=2.6cm, minimum height=0.72cm, align=center, fill=yellow!12},
+    titlebox/.style={draw, rounded corners, fill=black!6, inner sep=5pt},
+    arr/.style={-{Latex[length=2mm]}, thick}
+]
+\node[titlebox] (leftframe) {
+\begin{tikzpicture}[node distance=0.52cm and 0.55cm]
+\node[schema] (du) {dim\_user};
+\node[schema, below=of du] (dp) {dim\_product};
+\node[schema, below=of dp] (dd) {dim\_department};
+\node[schema, below=of dd] (dos) {dim\_order\_slot};
+\node[schema, right=1.2cm of dp] (foi) {fact\_order\_items};
+\node[schema, above=of foi] (fo) {fact\_orders};
+\node[schema, below=of foi] (muf) {mart\_user\_features};
+
+\draw[arr] (du.east) -- (fo.west);
+\draw[arr] (du.east) -- (foi.west);
+\draw[arr] (dp.east) -- (foi.west);
+\draw[arr] (dd.east) -- (foi.west);
+\draw[arr] (dos.east) -- (fo.east);
+\draw[arr] (dos.east) -- (foi.east);
+\draw[arr] (fo.south) -- (muf.north);
+\node[above=0.1cm of du, font=\bfseries] {Star schema and reusable marts};
+\end{tikzpicture}
+};
+
+\node[titlebox, right=0.75cm of leftframe] (rightframe) {
+\begin{tikzpicture}[node distance=0.42cm]
+\node[job] (j0) {\texttt{00\_setup}};
+\node[job, below=of j0] (j1) {\texttt{01\_sample\_and\_upload}};
+\node[job, below=of j1] (j2) {\texttt{02\_bronze\_ingest}};
+\node[job, below=of j2] (j3) {\texttt{03\_silver\_transform}};
+\node[job, below=of j3] (j4) {\texttt{04\_gold\_model}};
+\node[job, below=of j4] (j5) {\texttt{05\_olap}};
+\node[job, below=of j5] (j6) {\texttt{06\_association\_rules}};
+\node[job, below=of j6] (j7) {\texttt{07\_clustering}};
+\node[job, below=of j7] (j8) {\texttt{08\_classifier}};
+\node[job, below=of j8] (j9) {\texttt{09\_regression}};
+\node[job, below=of j9] (j10) {\texttt{10\_streaming\_replay}};
+\node[job, below=of j10] (j11) {\texttt{11\_optimize}};
+\node[job, below=of j11] (j12) {\texttt{12\_report\_pack}};
+
+\foreach \a/\b in {j0/j1,j1/j2,j2/j3,j3/j4,j4/j5,j5/j6,j6/j7,j7/j8,j8/j9,j9/j10,j10/j11,j11/j12}
+    \draw[arr] (\a.south) -- (\b.north);
+
+\node[above=0.1cm of j0, font=\bfseries] {Sequential Databricks Asset Bundle job};
+\end{tikzpicture}
+};
+\end{tikzpicture}
+\caption{Simplified RetailPulse warehouse model and orchestration flow. The left side shows the logical gold-layer structure around facts, dimensions, and the user feature mart. The right side shows the sequential notebook job defined in the Databricks Asset Bundle configuration.}
+\label{fig:schemajob}
+\end{figure*}
+
+The architecture uses a deliberate separation of concerns. The early notebooks establish environment state, validate raw inputs, and enforce explicit schemas. The middle notebooks generate durable Delta tables for cleaned order history and dimensional analysis. The later notebooks create higher-level analytics outputs and validations that can be consumed both by humans and by the dashboard. This progression is important because it keeps the report tables downstream of stable warehouse contracts rather than ad hoc notebook cells.
+
+\section*{5. Results, Diagrams, Dashboards}
+The validated run demonstrates that RetailPulse is not just a theoretical design. It is a working Databricks project with a successful end-to-end rebuild, persisted report tables, and a published dashboard surface. Table~\ref{tab:runfacts} summarizes the validated live state used throughout this report.
+
+\begin{table}[H]
+\centering
+\caption{Validated April 5, 2026 execution facts.}
+\label{tab:runfacts}
+\small
+\begin{tabular}{p{3.0cm} p{4.0cm}}
+\toprule
+\textbf{Item} & \textbf{Value} \\
+\midrule
+Workspace target & Databricks Free Edition serverless \\
+Bundle job name & \texttt{retailpulse\_full\_rebuild} \\
+Job id & \texttt{61936309152043} \\
+Successful run id & \texttt{631388168060027} \\
+Dashboard & \texttt{RetailPulse Demo Dashboard} \\
+Dashboard revision & \texttt{2026-04-05T08:40:02.619Z} \\
+Notebook fallback & \texttt{12\_report\_pack.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The warehouse outputs are also material results because they show the pipeline actually populated the expected layers. The final row counts reported by the validated release include \texttt{bronze\_orders} with 341,974 rows, \texttt{silver\_order\_items} with 3,405,038 rows, \texttt{fact\_order\_items} with 3,405,038 rows, \texttt{fact\_orders} with 334,438 rows, \texttt{mart\_association\_rules} with 49 rows, \texttt{report\_cluster\_profiles} with 3 rows, \texttt{report\_cluster\_k\_scores} with 3 rows, \texttt{report\_stream\_validation} with 158 rows, and \texttt{report\_optimize\_summary} with 2 rows. These counts align with the report-pack notebook and the repo-tracked results summary \cite{retailpulse_docs}.
+
+The dashboard was organized into five pages, each mirrored by the report-pack notebook: Executive Overview, Order Behavior, Recommendations and Segments, Execution and Data Quality, Experimental Insights and Performance. This structure is valuable because it lets the reviewer start from high-level business-facing visuals and then drill down into the supporting tables only when needed.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{01_run_success.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{10_orders_by_day.png}
+\end{minipage}
+\caption{Execution proof and overview visuals. Left: successful Databricks run confirmation for the validated release. Right: one of the dashboard-backed order behavior views, showing order distribution across the days of the week.}
+\label{fig:runandday}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{03_olap_outputs.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{11_top_products.png}
+\end{minipage}
+\caption{Descriptive analytics outputs. Left: OLAP summaries from the Executive Overview. Right: top-product evidence from the Order Behavior page. Together they show that the project surfaced warehouse-style descriptive analytics instead of notebook-only aggregates.}
+\label{fig:olaptop}
+\end{figure*}
+
+Representative descriptive outcomes are already meaningful. The top departments by item count in the validated run were Produce (989,427 items), Dairy Eggs (564,570), Snacks (307,015), Beverages (286,615), and Frozen (235,565). Their average basket sizes ranged from approximately 14.50 to 16.48 items. These results come from the persisted cube, rollup, and basket-analysis outputs rather than from temporary notebook displays.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{04_association_rules.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{12_seed_recommendations.png}
+\end{minipage}
+\caption{Recommendation evidence. Left: top pairwise association rules. Right: seed-product recommendations, including the default seed used in the dashboard and report pack.}
+\label{fig:rules}
+\end{figure*}
+
+The recommendation path produced interpretable results even with the serverless-safe pairwise mining approach. For example, the rule \emph{Organic Garlic} \(\rightarrow\) \emph{Organic Yellow Onion} achieved support 0.0073, confidence 0.2018, and lift 5.4620. The seed product \emph{Organic Raspberries} produced recommendations such as \emph{Bag of Organic Bananas} and \emph{Organic Strawberries}. The key point is not just that the rules exist, but that they are materialized into \texttt{mart\_association\_rules} and can be reused across the dashboard, notebook fallback, and written report.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{05_cluster_profiles.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{13_cluster_k_scores.png}
+\end{minipage}
+\caption{Segmentation outputs. Left: cluster profile summaries. Right: model-selection evidence for \(k = 3, 4, 5\), which justifies the chosen segment count.}
+\label{fig:cluster}
+\end{figure*}
+
+The clustering stage produced three segments that are easy to interpret. Cluster 0 behaved like frequent loyal shoppers with average total orders of 33.28 and reorder rate of 0.6521. Cluster 1 behaved like light occasional shoppers with average total orders of 7.54 and basket size of 6.63. Cluster 2 behaved like large-basket stock-up shoppers with average basket size of 17.12. The report intentionally highlights the segment interpretation and the \(k\)-selection evidence together because clustering results are much more convincing when the choice of \(k\) is explicit.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{08_stream_validation.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{09_optimize_summary.png}
+\end{minipage}
+\caption{Execution and performance evidence. Left: streaming replay validation showing checked order-slot groups and zero mismatches. Right: optimize benchmark summary showing that the benchmark queries were slower after optimization on this small sample.}
+\label{fig:streamopt}
+\end{figure*}
+
+The execution-quality layer is one of the strongest parts of the project. The streaming replay notebook checked 158 order-slot groups and found 0 mismatches between the streaming aggregate and the equivalent batch calculation. Likewise, the OLAP notebook persisted a validation table that compares cube totals with direct fact-table totals. These checks matter because they turn the data-quality story into explicit evidence rather than a visual claim.
+
+The optimization benchmark is another example of honest reporting. The project ran \texttt{OPTIMIZE} and \texttt{ZORDER BY} correctly, persisted raw timings and a summary table, and then documented that the measured queries became slower on this small sample. For \texttt{department\_hour\_distribution}, the runtime changed from 0.6994 seconds to 0.8350 seconds. For \texttt{user\_basket\_summary}, the runtime changed from 0.6828 seconds to 0.9789 seconds. This is not a failure of the report; it is evidence that the report does not hide inconvenient outcomes.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{14_classifier_feature_importance.png}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{15_olap_validation.png}
+\end{minipage}
+\caption{Supporting evidence from the exploratory and validation layers. Left: feature-importance output for the exploratory decision tree. Right: OLAP validation detail confirming that grouped cube totals match direct fact-table aggregation.}
+\label{fig:fiolap}
+\end{figure*}
+
+Finally, the report retains the exploratory supervised-model outputs while keeping them in the correct lane. The decision tree achieved accuracy 0.9136 and AUC 0.8813 against a majority-baseline accuracy of 0.7445, while the linear regression achieved RMSE 5.0945 and \(R^2 = 0.5580\) against a mean-baseline RMSE of 7.6627. These metrics are useful for discussion and dashboard completeness, but they are not the primary proof points of the system because the feature design still needs a stricter leakage-safe redesign.
+\section*{6. Detailed Explanation of Each Notebook, Its Working, and Code}
+The notebook workflow is the backbone of RetailPulse. Each notebook has one bounded responsibility and writes outputs that become the inputs for the next stage. This keeps the pipeline linear and inspectable.
+
+\subsection*{6.1 Environment and ingestion notebooks}
+\textbf{Notebook 00 -- \texttt{00\_setup.py}.} This notebook initializes the working environment inside Databricks. It accepts widgets for \texttt{catalog}, \texttt{schema}, \texttt{raw\_volume}, \texttt{replay\_volume}, and \texttt{checkpoint\_volume}. Its core job is to create the schema if needed, switch the SQL context, and create the Unity Catalog volumes that later stages depend on. The notebook also surfaces the resolved paths so the operator knows exactly where raw files, replay batches, and checkpoints should live.
+
+\begin{verbatim}
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {qname(catalog, schema)}")
+for volume in (raw_volume, replay_volume, checkpoint_volume):
+    spark.sql(f"CREATE VOLUME IF NOT EXISTS {qname(catalog, schema, volume)}")
+\end{verbatim}
+
+\textbf{Notebook 01 -- \texttt{01\_sample\_and\_upload.py}.} This notebook does not perform sampling itself. Sampling happens locally for portability and to stay within serverless constraints. The notebook instead validates that the expected CSV files were uploaded to the raw volume and computes preview row counts. This is a good example of explicit pipeline discipline: the project does not silently proceed if the raw upload contract is incomplete.
+
+\textbf{Notebook 02 -- \texttt{02\_bronze\_ingest.py}.} This notebook ingests the uploaded CSVs into explicit-schema Delta tables. It defines the schemas for orders, order-product rows, products, aisles, and departments; reads the CSVs from the raw volume; asserts that each frame is non-empty; and then writes the bronze tables with overwrite-schema enabled. The explicit-schema step is important because it prevents accidental type drift in the rest of the pipeline.
+
+\begin{verbatim}
+bronze_frames = {
+    "bronze_orders": read_csv("orders.csv", orders_schema),
+    "bronze_order_products_prior": read_csv("order_products__prior.csv",
+                                           order_products_schema),
+    ...
+}
+\end{verbatim}
+
+\subsection*{6.2 Cleansing and warehouse-model notebooks}
+\textbf{Notebook 03 -- \texttt{03\_silver\_transform.py}.} This notebook standardizes types, removes obvious bad keys, enriches products with aisle and department attributes, unions prior and train order-item sets, and creates reusable user-history aggregates. The key outputs are \texttt{silver\_orders}, \texttt{silver\_order\_items}, \texttt{silver\_products\_enriched}, and \texttt{silver\_user\_history}. Its role is to move the data from raw landing format into a cleaned analytical shape.
+
+\textbf{Notebook 04 -- \texttt{04\_gold\_model.py}.} This notebook creates the star-schema tables and the user-feature mart used downstream. It generates dimensions for users, products, aisles, departments, and order slots; facts for order items and orders; and the \texttt{mart\_user\_features} table used by clustering and the exploratory ML notebooks. It also runs basic contract checks, such as null-key counts and whether \texttt{reordered} values stay in the expected 0/1 range.
+
+\begin{verbatim}
+fact_orders = (
+    fact_order_items.groupBy("order_id", "user_id", "eval_set",
+                             "order_number", "order_dow",
+                             "order_hour_of_day", "days_since_prior_order")
+    .agg(F.count("*").alias("basket_size"),
+         F.sum("reordered").alias("reordered_item_count"),
+         F.countDistinct("department_id").alias("distinct_department_count"))
+)
+\end{verbatim}
+
+\subsection*{6.3 Analytics notebooks}
+\textbf{Notebook 05 -- \texttt{05\_olap.py}.} This notebook performs the descriptive warehouse analysis. It executes a \texttt{CUBE} over department and day-of-week, a \texttt{ROLLUP} over day-of-week and hour, and a basket-size analysis by daypart and department. It also computes a validation table by comparing cube totals against manually grouped fact totals. The persisted outputs are \texttt{report\_olap\_cube}, \texttt{report\_olap\_rollup}, \texttt{report\_olap\_basket}, and \texttt{report\_olap\_validation}. The underlying aggregation pattern follows standard Spark SQL grouping analytics \cite{spark_sql}.
+
+\textbf{Notebook 06 -- \texttt{06\_association\_rules.py}.} This notebook derives pairwise association rules from order baskets. It accepts widget-configured \texttt{min\_support}, \texttt{min\_confidence}, and \texttt{seed\_products}. It first collects the unique products per order, explodes the basket into item pairs, computes antecedent and consequent counts, and then derives support, confidence, and lift. The rules are written to \texttt{mart\_association\_rules}. A second cell then demonstrates how to retrieve recommendation candidates for one or more seed products.
+
+\begin{verbatim}
+baskets = fact_order_items.groupBy("order_id") \
+    .agg(F.collect_set("product_id").alias("items")) \
+    .filter(F.size("items") >= 2)
+\end{verbatim}
+
+\textbf{Notebook 07 -- \texttt{07\_clustering.py}.} This notebook clusters customers using KMeans over the engineered user features. It standardizes the feature vector, evaluates \(k = 3, 4, 5\) with silhouette score, persists the model-selection summary to \texttt{report\_cluster\_k\_scores}, writes the chosen \texttt{cluster\_id} back into \texttt{mart\_user\_features}, and then materializes cluster profiles in \texttt{report\_cluster\_profiles}. Its role is not just segmentation, but also creating reusable segment context for the dashboard. The clustering, classifier, and regression notebooks all use the Spark ML DataFrame-based APIs \cite{spark_ml}.
+
+\subsection*{6.4 Exploratory predictive notebooks}
+\textbf{Notebook 08 -- \texttt{08\_classifier.py}.} This notebook trains a \texttt{DecisionTreeClassifier} to predict whether a user belongs to the top quartile of \texttt{total\_orders}. It uses feature columns such as basket size, reorder behavior, active days, and \texttt{cluster\_id}. The notebook computes AUC, accuracy, a majority-class baseline, and the threshold value used to define \texttt{power\_user}. It then writes \texttt{report\_classifier\_metrics} and \texttt{report\_classifier\_feature\_importance}. The code is straightforward and reproducible, but the report explicitly treats the outcome as exploratory because of leakage risk in the feature design.
+
+\textbf{Notebook 09 -- \texttt{09\_regression.py}.} This notebook trains a \texttt{LinearRegression} model to predict \texttt{basket\_size} from order context and user-level history. It joins \texttt{fact\_orders} with the user-feature mart, assembles the model vector, performs a train/test split, and persists RMSE, \(R^2\), and the mean-baseline RMSE to \texttt{report\_regression\_metrics}. Like the classifier notebook, it is included because it demonstrates a predictive analytics lane, but the report avoids presenting it as operationally rigorous.
+
+\subsection*{6.5 Validation and performance notebooks}
+\textbf{Notebook 10 -- \texttt{10\_streaming\_replay.py}.} This notebook demonstrates a replay-style Structured Streaming flow that is compatible with Databricks Free Edition serverless. It creates a held-out slice of orders, partitions them into a small number of CSV batches, writes them to a replay volume, reads them back using \texttt{readStream}, aggregates them by day and hour, and writes the results to \texttt{stream\_order\_slot\_metrics} using \texttt{availableNow=True}. It then compares the streaming aggregate with an equivalent batch aggregate and persists the comparison in \texttt{report\_stream\_validation}. The final assertion that mismatches equal zero is one of the strongest pieces of correctness evidence in the project.
+
+\begin{verbatim}
+query = (
+    stream_metrics.writeStream.format("delta")
+    .outputMode("complete")
+    .option("checkpointLocation", checkpoint_root)
+    .trigger(availableNow=True)
+    .toTable(qname("stream_order_slot_metrics"))
+)
+\end{verbatim}
+
+\textbf{Notebook 11 -- \texttt{11\_optimize.py}.} This notebook benchmarks two representative queries before and after \texttt{OPTIMIZE ... ZORDER BY}. It measures runtime by collecting the query result, writes raw timing rows to \texttt{report\_optimize\_timings}, and writes a pivoted summary table to \texttt{report\_optimize\_summary}. The notebook is important because it demonstrates physical-table optimization and performance measurement without pretending that optimization must always help on small datasets.
+
+\subsection*{6.6 Presentation notebook}
+\textbf{Notebook 12 -- \texttt{12\_report\_pack.py}.} This notebook is the final evidence hub. It mirrors Dashboard V2 with the same five sections and collects the key report tables into one notebook surface. It computes table counts, order-by-day summaries, top products, recommendation rules, seed recommendations, segment profiles, OLAP validation summaries, stream validation detail, exploratory model metrics, feature importance, and optimize timing views. When the dashboard is unavailable, this notebook becomes the canonical fallback presentation surface.
+
+In aggregate, the notebook design follows a strong submission pattern: each notebook has one responsibility, downstream steps consume persisted tables rather than hidden notebook state, and the final report-facing evidence is stored in reusable report tables. That is a stronger engineering posture than a typical notebook chain built around temporary views and manual screenshots.
+
+\section*{7. Limitations and Lessons Learned}
+RetailPulse is strongest when it stays honest about its boundaries. The first limitation is the source data. Instacart does not contain raw prices or absolute dates, so any claim about revenue trends, profit, or month-over-month seasonality would be unsupported. The system therefore uses relative order timing and item-level counts instead of inventing facts that are not present in the data.
+
+The second limitation is the platform target. Databricks Free Edition serverless is good enough for a capstone-quality implementation, but it is not a final production environment. It shaped the recommendation path, the streaming implementation, and the operational release posture. The project learned to favor reliability and portability over algorithmic ambition in a few places. For example, pairwise association rules replaced FP-growth because they were more dependable in the serverless setting.
+
+The third limitation is methodological. The classifier and regression outputs are informative, but the feature pipelines are not yet submission-rigorous enough to support strong predictive claims. The clustering path includes \texttt{total\_orders} in its feature set, and the classifier later uses \texttt{cluster\_id} while predicting a label derived from \texttt{total\_orders}. The regression path joins user aggregates back into per-order prediction without a strict temporal boundary. The lesson is that predictive metrics can be attractive and still need to be demoted to exploratory status if the feature design is not leakage-safe.
+
+The fourth lesson is about evidence packaging. Early versions of the project were stronger on implementation than on proof discipline. The final release improved this by persisting OLAP outputs, adding validation tables, publishing the dashboard, and standardizing the screenshot pack. That change is not cosmetic; it materially improves the credibility of the submission.
+\section*{8. Future Work}
+The next major step for RetailPulse is to evolve from an Instacart-specific internal pilot into a multi-dataset self-service analytics system. The planned architecture keeps Databricks as the backend and system of record, but introduces a Streamlit-based Databricks App for upload, file-role assignment, column mapping, validation, run submission, and artifact download. In that model, each uploaded dataset receives a \texttt{dataset\_id}, a stored mapping manifest, and a controlled processing lifecycle.
+
+The pipeline itself would need to become dataset-aware. Instead of overwriting single-dataset tables, the bronze, silver, gold, mart, and report layers would all be keyed by \texttt{dataset\_id}. Dashboard queries and the report-pack notebook would then become parameterized so multiple retail datasets could coexist in one workspace. This would move RetailPulse closer to a reusable internal B2B analytics platform rather than a single-source demonstration.
+
+Another future-work lane is predictive redesign. The current supervised models should remain outside the operational path until leakage-safe features, stricter train/test design, and model versioning are introduced. In the near term, the safer operational outputs are descriptive dashboards, recommendation tables, customer segments, and rule-based action files. Only after the canonical retail contract is stable should the predictive layer be promoted beyond exploratory insight.
+
+\section*{9. Conclusion}
+RetailPulse achieves the project goal it set for itself: it demonstrates a reproducible Databricks retail analytics system that is stronger than a notebook demo and more honest than a glossy but weakly evidenced report. The system ingests sampled Instacart data, builds a bronze-silver-gold Delta pipeline, exposes OLAP outputs, recommendation rules, customer segments, exploratory predictive metrics, streaming validation, and optimization evidence, and packages the results into both a Databricks AI/BI dashboard and a notebook fallback.
+
+Just as importantly, the submission stays disciplined about what is not proven. It does not claim revenue analytics without price data. It does not claim calendar analytics without dates. It does not claim that the current supervised metrics are production-grade. That combination of implemented functionality and bounded claims makes RetailPulse a stronger and more credible project. The result is a reviewable, rerunnable, and presentation-ready analytics system that can also serve as the foundation for a more general self-service retail platform in later work.
+
+\renewcommand{\refname}{10. References}
+\begin{thebibliography}{99}
+
+\bibitem{instacart}
+Instacart, ``The Instacart Online Grocery Shopping Dataset 2017,'' Kaggle, 2017. [Online]. Available: \url{https://www.kaggle.com/competitions/instacart-market-basket-analysis}. Accessed: Apr. 5, 2026.
+
+\bibitem{databricks_free}
+Databricks, ``Databricks Free Edition documentation,'' 2026. [Online]. Available: \url{https://docs.databricks.com/aws/en/getting-started/free-edition}. Accessed: Apr. 5, 2026.
+
+\bibitem{databricks_streaming}
+Databricks, ``Structured Streaming on serverless compute and AvailableNow trigger,'' 2026. [Online]. Available: \url{https://docs.databricks.com/}. Accessed: Apr. 5, 2026.
+
+\bibitem{databricks_bundles}
+Databricks, ``Databricks Asset Bundles,'' 2026. [Online]. Available: \url{https://docs.databricks.com/aws/en/dev-tools/bundles/}. Accessed: Apr. 5, 2026.
+
+\bibitem{databricks_dashboards}
+Databricks, ``AI/BI Dashboards,'' 2026. [Online]. Available: \url{https://docs.databricks.com/aws/en/dashboards/}. Accessed: Apr. 5, 2026.
+
+\bibitem{delta_medallion}
+Databricks, ``What is the medallion lakehouse architecture?'' 2026. [Online]. Available: \url{https://www.databricks.com/glossary/medallion-architecture}. Accessed: Apr. 5, 2026.
+
+\bibitem{spark_sql}
+Apache Spark, ``Spark SQL reference: GROUP BY, ROLLUP, CUBE, and grouping analytics,'' 2026. [Online]. Available: \url{https://spark.apache.org/docs/latest/sql-ref-syntax-qry-select-groupby.html}. Accessed: Apr. 5, 2026.
+
+\bibitem{spark_ml}
+Apache Spark, ``MLlib DataFrame-based machine learning API guide,'' 2026. [Online]. Available: \url{https://spark.apache.org/docs/latest/ml-guide.html}. Accessed: Apr. 5, 2026.
+
+\bibitem{retailpulse_docs}
+RetailPulse repository documentation, ``README, RESULTS-README, dashboard spec, showcase summary, current production state, and notebook sources,'' GitHub repository working state, Apr. 5, 2026.
+
+\end{thebibliography}
+
+\end{document}

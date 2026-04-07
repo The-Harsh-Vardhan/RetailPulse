@@ -2,13 +2,46 @@
 # MAGIC %md
 # MAGIC # OLAP Analysis
 # MAGIC
-# MAGIC This notebook runs submission-safe CUBE and ROLLUP queries over the gold facts.
+# MAGIC This notebook runs submission-safe `CUBE` and `ROLLUP` queries over the gold facts and persists the resulting report tables.
+# MAGIC
+# MAGIC ## Run Inputs
+# MAGIC - `catalog`: optional override for the active catalog
+# MAGIC - `schema`: schema that contains the gold facts and report tables
+# MAGIC
+# MAGIC ## Source Tables
+# MAGIC - `fact_order_items`
+# MAGIC - `fact_orders`
+# MAGIC - `dim_order_slot`
+# MAGIC
+# MAGIC ## Output Tables
+# MAGIC - `report_olap_cube`
+# MAGIC - `report_olap_rollup`
+# MAGIC - `report_olap_basket`
+# MAGIC - `report_olap_validation`
+# MAGIC
+# MAGIC ## Workflow
+# MAGIC 1. Resolve the active catalog and schema.
+# MAGIC 2. Define the OLAP queries at cube, rollup, and basket-analysis grain.
+# MAGIC 3. Cross-check the cube result against a direct aggregation.
+# MAGIC 4. Persist the report tables used by the dashboard and report pack.
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Capture Runtime Inputs
+# MAGIC
+# MAGIC This notebook is where the descriptive analytics layer becomes durable. Later dashboard and evidence notebooks should read these report tables instead of recalculating the logic.
 
 # COMMAND ----------
 from pyspark.sql import functions as F
 
 dbutils.widgets.text("catalog", "")
 dbutils.widgets.text("schema", "retailpulse")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Resolve Catalog Context
+# MAGIC
+# MAGIC Setting the catalog and schema explicitly keeps the generated SQL readable in query history and avoids ambiguity during reruns.
 
 # COMMAND ----------
 catalog = dbutils.widgets.get("catalog") or spark.sql("SELECT current_catalog()").first()[0]
@@ -22,6 +55,13 @@ def qname(name: str) -> str:
 spark.sql(f"USE CATALOG `{catalog}`")
 spark.sql(f"USE SCHEMA `{schema}`")
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Define OLAP Queries
+# MAGIC
+# MAGIC Keep the SQL strings readable so the grouping grain is obvious both in the notebook and in the saved query history.
+
+# COMMAND ----------
 cube_query = f"""
 SELECT
   department_id,
@@ -60,6 +100,13 @@ GROUP BY dos.daypart, foi.department_id
 ORDER BY dos.daypart, avg_basket_size DESC
 """
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Execute Queries And Validate The Cube
+# MAGIC
+# MAGIC The validation frame proves that the base-grain cube rows match a direct fact-table aggregation before the results are reused elsewhere.
+
+# COMMAND ----------
 cube_df = spark.sql(cube_query)
 rollup_df = spark.sql(rollup_query)
 basket_df = spark.sql(basket_query)
@@ -75,6 +122,13 @@ comparison = (
     .withColumn("matches", F.col("total_items") == F.col("manual_total_items"))
 )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Persist Report Tables
+# MAGIC
+# MAGIC These tables are the descriptive analytics contract used by the dashboard, the report pack, and the new prescriptive notebook.
+
+# COMMAND ----------
 for table_name, frame in {
     "report_olap_cube": cube_df,
     "report_olap_rollup": rollup_df,
@@ -88,7 +142,22 @@ for table_name, frame in {
         .saveAsTable(qname(table_name))
     )
 
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Review OLAP Outputs
+# MAGIC
+# MAGIC Use these displays to confirm both analytical usefulness and validation integrity before moving on to recommendations and segmentation.
+
+# COMMAND ----------
 display(cube_df)
 display(rollup_df)
 display(basket_df)
 display(comparison)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## Interpretation Note
+# MAGIC
+# MAGIC `report_olap_cube` and `report_olap_rollup` are reusable descriptive outputs.
+# MAGIC
+# MAGIC `report_olap_validation` is the quality guardrail: if `matches` is false for any row, the descriptive layer should be treated as suspect until the gold facts are rechecked.
