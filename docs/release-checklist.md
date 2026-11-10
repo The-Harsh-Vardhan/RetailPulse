@@ -2,7 +2,7 @@
 
 ## Pre-Release
 - [ ] `README.md` reflects the April 5 validated run and the published dashboard
-- [ ] `Docs/Executive Summary.md` reflects the current internal-pilot posture
+- [ ] `docs/Executive Summary.md` reflects the current internal-pilot posture
 - [ ] Classifier and regression are described as `Experimental Insights`, not operational KPIs
 - [ ] [current-production-state.md](current-production-state.md) matches the live workspace
 - [ ] [dashboard-metadata.md](dashboard-metadata.md) matches the live dashboard
@@ -43,9 +43,9 @@
 ## GitHub Showcase Pass
 - [ ] `README.md` opens with a fast reviewer path and visible proof assets
 - [ ] Featured screenshots in the README match the live workspace story
-- [ ] `Docs/showcase-summary.md` matches the README and current production state
-- [ ] `Docs/RetailPulse Handbook.md` is linked and up to date
-- [ ] `Docs/Next Step Priority Plan.md` reflects the current milestone and does not imply a premature ML cycle
+- [ ] `docs/showcase-summary.md` matches the README and current production state
+- [ ] `docs/RetailPulse Handbook.md` is linked and up to date
+- [ ] `docs/Next Step Priority Plan.md` reflects the current milestone and does not imply a premature ML cycle
 
 ## Final Signoff Rule
 - [ ] No document, screenshot, or spoken claim contradicts the live workspace

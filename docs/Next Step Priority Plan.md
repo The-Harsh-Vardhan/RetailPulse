@@ -36,8 +36,8 @@ The short answer is simple: do not spend the next cycle building more models. Re
 
 ### 1. Finish the release-quality pass
 - Make sure the repo and live workspace say the same thing.
-- Use `Docs/current-production-state.md` as the authoritative release record.
-- Use `Docs/release-checklist.md` and `Docs/production-runbook.md` for every refresh.
+- Use `docs/current-production-state.md` as the authoritative release record.
+- Use `docs/release-checklist.md` and `docs/production-runbook.md` for every refresh.
 - Intentionally commit the documentation state once it is internally consistent.
 - Rehearse the boss walkthrough until it is stable at 6 to 8 minutes.
 

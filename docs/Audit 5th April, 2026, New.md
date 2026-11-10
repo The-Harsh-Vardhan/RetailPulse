@@ -1,6 +1,6 @@
 # Audit 5th April, 2026, New
 
-This audit supersedes [Audit 5th April, 2026](C:/D%20Drive/Projects/6th%20Sem/RetailPulse/Docs/Audit%205th%20April,%202026.md). That older file is now stale because the repo, the live Databricks workspace, the dashboard surface, and the evidence pack all moved forward on April 5, 2026.
+This audit supersedes [Audit 5th April, 2026](C:/D%20Drive/Projects/6th%20Sem/RetailPulse/docs/Audit%205th%20April,%202026.md). That older file is now stale because the repo, the live Databricks workspace, the dashboard surface, and the evidence pack all moved forward on April 5, 2026.
 
 ## Executive Verdict
 RetailPulse is materially stronger now. The MVP for demonstration is not "almost there" anymore. It is there. The pipeline runs, the report tables exist, the latest Databricks rebuild succeeded, Dashboard V2 is live, and the screenshot pack is richer. The project is demo-ready right now and near submission-ready. It is still not fully submission-safe because the supervised ML methodology is still soft and some polish gaps remain between "works well" and "frozen final artifact."
@@ -38,9 +38,9 @@ RetailPulse is no longer a notebook collection pretending to be a product. It is
 The repo now has an actual showcase path instead of a vague "please imagine the dashboard" story.
 
 - `README.md` is positioned as a GitHub reviewer entry point.
-- `Docs/showcase-summary.md`, `Docs/demo-script.md`, and `Docs/RetailPulse Handbook.md` give a coherent reviewer and demo path.
-- `Docs/databricks-dashboard-spec.md` and `Docs/databricks-dashboard-ui-guide.md` define Dashboard V2.
-- `Docs/dashboard-metadata.md` records the current live dashboard state.
+- `docs/showcase-summary.md`, `docs/demo-script.md`, and `docs/RetailPulse Handbook.md` give a coherent reviewer and demo path.
+- `docs/databricks-dashboard-spec.md` and `docs/databricks-dashboard-ui-guide.md` define Dashboard V2.
+- `docs/dashboard-metadata.md` records the current live dashboard state.
 - `assets/screenshots/` now contains files `01` through `15`, including the new V2 evidence set.
 
 ### Verified In Live Databricks Workspace

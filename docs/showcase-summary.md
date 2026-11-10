@@ -7,13 +7,13 @@ If someone opens this repository cold, the fastest clean path is:
 1. `README.md`
 2. this summary
 3. `assets/screenshots/` with Dashboard V2 hero images first
-4. `Docs/RetailPulse Handbook.md`
-5. `Docs/demo-script.md`
+4. `docs/RetailPulse Handbook.md`
+5. `docs/demo-script.md`
 
 If the review is more operational than academic, then add:
-6. `Docs/current-production-state.md`
-7. `Docs/release-checklist.md`
-8. `Docs/Next Step Priority Plan.md`
+6. `docs/current-production-state.md`
+7. `docs/release-checklist.md`
+8. `docs/Next Step Priority Plan.md`
 
 ## Dashboard V2 Page Map
 - `Executive Overview`: KPI counters, orders by day, department demand, timing pattern, and core table counts
@@ -155,4 +155,4 @@ This is an important honesty point for the demo: the optimization step completed
 - Lead with the successful Databricks run screenshot and Dashboard V2 `Executive Overview`.
 - Show recommendation proof, top products, cluster k-selection, and streaming validation before you show any exploratory model metrics.
 - Keep classifier and regression evidence in the repo, but do not make them the hero assets.
-- Link reviewers to `Docs/RetailPulse Handbook.md` if they want the full operating model instead of just the outcome snapshot.
+- Link reviewers to `docs/RetailPulse Handbook.md` if they want the full operating model instead of just the outcome snapshot.

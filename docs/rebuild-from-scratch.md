@@ -264,13 +264,13 @@ After a successful run, capture:
 - Replay-stream versus batch validation
 - Optimize timing evidence
 - Predictive and prescriptive deep-dive notebook outputs for reviewer walkthroughs
-- `Docs/dashboard-output-diagrams.md` as the widget-by-widget dashboard explainer
+- `docs/dashboard-output-diagrams.md` as the widget-by-widget dashboard explainer
 
 Use `12_report_pack.py` to assemble the final report-facing outputs.
 
 For the finished demo package, also use:
-- `Docs/showcase-summary.md`
-- `Docs/demo-script.md`
+- `docs/showcase-summary.md`
+- `docs/demo-script.md`
 
 ## 16. Run Through GitHub Actions Instead Of The Local CLI
 If you want GitHub to trigger the deploy-and-run flow after setup:

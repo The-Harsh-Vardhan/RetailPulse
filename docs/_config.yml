@@ -1,0 +1,3 @@
+theme: jekyll-theme-cayman
+title: RetailPulse
+description: Databricks-first retail analytics lakehouse on the Instacart dataset - bronze, silver, gold, OLAP, recommendations, segments and a five-page AI/BI dashboard.

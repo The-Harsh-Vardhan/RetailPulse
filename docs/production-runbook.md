@@ -90,4 +90,4 @@ Use this order:
 
 ## Current Priority Rule
 - Do not start a new modeling cycle until release quality, visualization polish, and walkthrough stability are in place.
-- If a next-phase decision is needed, use `Docs/Next Step Priority Plan.md`.
+- If a next-phase decision is needed, use `docs/Next Step Priority Plan.md`.

@@ -12,7 +12,7 @@ This handbook is the single detailed explanation of what the project is, what it
 - Databricks Asset Bundle configuration for a sequential full rebuild job
 - Persisted report tables for OLAP, clustering, cluster-k selection, streaming validation, optimize evidence, and exploratory model metrics
 - SQL query pack for the published AI/BI dashboard
-- Boss-facing and release-facing docs under `Docs/`
+- Boss-facing and release-facing docs under `docs/`
 - Screenshot evidence pack under `assets/screenshots/`
 
 ### Verified in live Databricks workspace
@@ -149,8 +149,8 @@ databricks bundle validate -t dev
 ### Release evidence
 - Screenshot evidence: `assets/screenshots/`
 - Dashboard query source: `sql/retailpulse_dashboard_queries.sql`
-- Dashboard build instructions: `Docs/databricks-dashboard-ui-guide.md`
-- Production posture and release IDs: `Docs/current-production-state.md`
+- Dashboard build instructions: `docs/databricks-dashboard-ui-guide.md`
+- Production posture and release IDs: `docs/current-production-state.md`
 
 ## How To Demo It
 1. Start with the published AI/BI dashboard, not raw notebooks.
@@ -191,7 +191,7 @@ databricks bundle validate -t dev
 - Dashboard SQL: `sql/`
 - Tests: `tests/`
 - Bundle resources: `resources/`
-- Release and showcase docs: `Docs/`
+- Release and showcase docs: `docs/`
 - Screenshot evidence: `assets/screenshots/`
 
 ## FAQ
@@ -212,7 +212,7 @@ Because this sample is small. The benchmark was still worth running because it p
 Their current feature construction is still best treated as exploratory. They stay in the project for boss discussion and future modeling work, but they are not release KPIs or operational decision drivers.
 
 ### What should I open first as a reviewer?
-Open the published dashboard first. If anything is unclear, then use `Docs/demo-script.md`, `Docs/showcase-summary.md`, and `notebooks/12_report_pack.py`.
+Open the published dashboard first. If anything is unclear, then use `docs/demo-script.md`, `docs/showcase-summary.md`, and `notebooks/12_report_pack.py`.
 
 ## Related Docs
 - [Showcase Summary](showcase-summary.md)

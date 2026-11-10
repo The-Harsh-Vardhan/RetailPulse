@@ -6,7 +6,7 @@ Thank you for your interest in improving RetailPulse.
 
 1. Read [README.md](README.md) for project scope and current release truth.
 2. Read [HOW_TO_USE_README.md](HOW_TO_USE_README.md) for setup and rerun guidance.
-3. Check [Docs/release-checklist.md](Docs/release-checklist.md) before proposing release-facing changes.
+3. Check [docs/release-checklist.md](docs/release-checklist.md) before proposing release-facing changes.
 
 ## Contribution Scope
 
