@@ -3,8 +3,8 @@
 This file explains the current Dashboard V2 outputs and their matching screenshot artifacts.
 
 Use it alongside:
-- `Docs/databricks-dashboard-spec.md` for the canonical widget and query layout
-- `Docs/evidence-pack.md` for screenshot-pack policy and capture order
+- `docs/databricks-dashboard-spec.md` for the canonical widget and query layout
+- `docs/evidence-pack.md` for screenshot-pack policy and capture order
 - `notebooks/12_report_pack.py` for the notebook fallback that mirrors the same five-section story
 
 ## How To Read This File

@@ -81,7 +81,7 @@ The supervised models are exploratory, not release gates.
 | --- | --- |
 | <img src="assets/screenshots/08_stream_validation.png" alt="Streaming validation evidence" width="100%"> | <img src="assets/screenshots/14_classifier_feature_importance.png" alt="Classifier feature importance" width="100%"> |
 
-Full evidence set: [RESULTS-README.md](RESULTS-README.md) and [Docs/evidence-pack.md](Docs/evidence-pack.md).
+Full evidence set: [RESULTS-README.md](RESULTS-README.md) and [docs/evidence-pack.md](docs/evidence-pack.md).
 
 ## Quickstart
 
@@ -108,7 +108,7 @@ scripts/        sampling, replay-batch split, notebook export
 sql/            dashboard queries, release smoke checks
 tests/          unit tests for the scripts
 assets/         logo, screenshots, Mermaid sources
-Docs/           handbook, runbook, evidence pack, submission material
+docs/           handbook, runbook, evidence pack, submission material
 docs/           GitHub Pages site
 ```
 
@@ -118,7 +118,7 @@ Databricks (Asset Bundles, serverless, Unity Catalog volumes, AI/BI dashboards),
 
 ## Docs
 
-Docs site: https://the-harsh-vardhan.github.io/RetailPulse/. Repository docs: [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md). Report and paper sources live in [Docs/Submission](Docs/Submission).
+Docs site: https://the-harsh-vardhan.github.io/RetailPulse/. Repository docs: [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md). Report and paper sources live in [docs/Submission](docs/Submission).
 
 ## Status
 
@@ -150,9 +150,9 @@ If you are reviewing the repo on GitHub, use this order:
 
 1. [RESULTS-README.md](RESULTS-README.md)
 2. [HOW TO USE.md](HOW%20TO%20USE.md)
-3. [Docs/showcase-summary.md](Docs/showcase-summary.md)
-4. [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
-5. [Docs/current-production-state.md](Docs/current-production-state.md)
+3. [docs/showcase-summary.md](docs/showcase-summary.md)
+4. [docs/RetailPulse Handbook.md](docs/RetailPulse%20Handbook.md)
+5. [docs/current-production-state.md](docs/current-production-state.md)
 
 ## Dashboard V2 Story
 
@@ -166,7 +166,7 @@ The live Databricks dashboard is organized into five pages:
 
 That same page order is mirrored in the packaged evidence and the fallback notebook.
 
-For deeper walkthroughs after the five-page story, use `notebooks/13_predictive_analysis.py` for the exploratory predictive lane, `notebooks/14_prescriptive_analysis.py` for the action-oriented recommendation and segmentation lane, and `Docs/dashboard-output-diagrams.md` for the widget-by-widget dashboard explanation.
+For deeper walkthroughs after the five-page story, use `notebooks/13_predictive_analysis.py` for the exploratory predictive lane, `notebooks/14_prescriptive_analysis.py` for the action-oriented recommendation and segmentation lane, and `docs/dashboard-output-diagrams.md` for the widget-by-widget dashboard explanation.
 
 ## Current Vs Future
 
@@ -184,19 +184,19 @@ That future system is planned next. It is not already implemented in this reposi
 
 ### Project story and results
 - [RESULTS-README.md](RESULTS-README.md)
-- [Docs/showcase-summary.md](Docs/showcase-summary.md)
-- [Docs/dashboard-output-diagrams.md](Docs/dashboard-output-diagrams.md)
-- [Docs/boss-brief.md](Docs/boss-brief.md)
+- [docs/showcase-summary.md](docs/showcase-summary.md)
+- [docs/dashboard-output-diagrams.md](docs/dashboard-output-diagrams.md)
+- [docs/boss-brief.md](docs/boss-brief.md)
 
 ### Running and adapting the workflow
 - [HOW TO USE.md](HOW%20TO%20USE.md)
-- [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
-- [Docs/rebuild-from-scratch.md](Docs/rebuild-from-scratch.md)
+- [docs/RetailPulse Handbook.md](docs/RetailPulse%20Handbook.md)
+- [docs/rebuild-from-scratch.md](docs/rebuild-from-scratch.md)
 
 ### Live-state and release docs
-- [Docs/current-production-state.md](Docs/current-production-state.md)
-- [Docs/production-runbook.md](Docs/production-runbook.md)
-- [Docs/release-checklist.md](Docs/release-checklist.md)
+- [docs/current-production-state.md](docs/current-production-state.md)
+- [docs/production-runbook.md](docs/production-runbook.md)
+- [docs/release-checklist.md](docs/release-checklist.md)
 - [sql/release_smoke_checks.sql](sql/release_smoke_checks.sql)
 
 ## Honesty Rules

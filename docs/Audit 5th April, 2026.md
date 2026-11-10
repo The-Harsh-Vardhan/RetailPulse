@@ -41,9 +41,9 @@ This repo is better engineered than a typical student capstone.
 The presentation layer is now real, not aspirational.
 
 - `assets/screenshots/` exists and contains real data-backed renders from the current project state.
-- `Docs/evidence-pack.md` defines the fixed evidence set.
-- `Docs/databricks-dashboard-spec.md`, `Docs/databricks-dashboard-ui-guide.md`, and `sql/retailpulse_dashboard_queries.sql` define a repo-tracked dashboard surface.
-- `Docs/demo-script.md` and `Docs/showcase-summary.md` make the project demonstrable without inventing new material on the fly.
+- `docs/evidence-pack.md` defines the fixed evidence set.
+- `docs/databricks-dashboard-spec.md`, `docs/databricks-dashboard-ui-guide.md`, and `sql/retailpulse_dashboard_queries.sql` define a repo-tracked dashboard surface.
+- `docs/demo-script.md` and `docs/showcase-summary.md` make the project demonstrable without inventing new material on the fly.
 
 ### Verified In Live Databricks Workspace
 The live workspace is now ahead of the older repo narrative.
@@ -142,7 +142,7 @@ That is enough for a strong project demonstration today.
 ## What’s Left For MVP Demo And Submission
 
 ### Must Do Before Submission
-- Update `README.md`, `Docs/Executive Summary.md`, and other top-level narrative docs to current truth.
+- Update `README.md`, `docs/Executive Summary.md`, and other top-level narrative docs to current truth.
 - Stop calling the dashboard future work in docs that now lag behind reality.
 - Update validated-run references from the older April 3 run to the newer April 5 successful run where appropriate.
 - Keep classifier and regression claims explicitly exploratory everywhere, or redesign the modeling pipeline before making stronger claims.

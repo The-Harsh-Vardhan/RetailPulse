@@ -274,5 +274,5 @@ These outputs remain in the repo because they are informative, but they are not 
 
 - Project front door: [README.md](README.md)
 - Operator guide: [HOW TO USE.md](HOW%20TO%20USE.md)
-- Deep showcase doc: [Docs/showcase-summary.md](Docs/showcase-summary.md)
-- Evidence catalog: [Docs/evidence-pack.md](Docs/evidence-pack.md)
+- Deep showcase doc: [docs/showcase-summary.md](docs/showcase-summary.md)
+- Evidence catalog: [docs/evidence-pack.md](docs/evidence-pack.md)

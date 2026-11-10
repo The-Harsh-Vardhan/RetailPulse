@@ -16,7 +16,7 @@ Open these tabs in advance:
 - `10_streaming_replay.py`
 - `11_optimize.py`
 
-Keep `Docs/showcase-summary.md` open as your backup source for numbers.
+Keep `docs/showcase-summary.md` open as your backup source for numbers.
 
 Release-state anchor:
 - Successful run id: `631388168060027`

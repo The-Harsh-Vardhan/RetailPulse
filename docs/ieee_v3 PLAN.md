@@ -1,7 +1,7 @@
 # IEEE Paper v3: richer release-safe visuals with a stronger methods formulation
 
 ## Summary
-Create a new manuscript at [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/RetailPulse/Docs/Submission/IEEE_Paper_v3.tex) by refactoring [IEEE_Paper_v2.tex](c:/D Drive/Projects/6th Sem/RetailPulse/Docs/Submission/IEEE_Paper_v2.tex), not overwriting it. Keep the current IEEE journal structure and all validated April 5, 2026 facts, but rebalance the paper toward four release-safe evidence lanes: OLAP behavior, product-demand visuals, recommendation/segmentation proof, and validation proof. Add a heavier but still disciplined math treatment in methodology, and keep exploratory ML present only as a short caveated subsection without new figures.
+Create a new manuscript at [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/RetailPulse/docs/Submission/IEEE_Paper_v3.tex) by refactoring [IEEE_Paper_v2.tex](c:/D Drive/Projects/6th Sem/RetailPulse/docs/Submission/IEEE_Paper_v2.tex), not overwriting it. Keep the current IEEE journal structure and all validated April 5, 2026 facts, but rebalance the paper toward four release-safe evidence lanes: OLAP behavior, product-demand visuals, recommendation/segmentation proof, and validation proof. Add a heavier but still disciplined math treatment in methodology, and keep exploratory ML present only as a short caveated subsection without new figures.
 
 ## Key Changes
 ### Manuscript structure
@@ -12,7 +12,7 @@ Create a new manuscript at [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/Retai
 
 ### Figures and dashboard evidence
 - Reuse existing validated visuals only; do not add exploratory ML screenshots and do not fabricate new charts.
-- Copy the selected screenshot assets into [Docs/Submission/Figures](c:/D Drive/Projects/6th Sem/RetailPulse/Docs/Submission/Figures) so the submission remains self-contained under the existing `\graphicspath`.
+- Copy the selected screenshot assets into [docs/Submission/Figures](c:/D Drive/Projects/6th Sem/RetailPulse/docs/Submission/Figures) so the submission remains self-contained under the existing `\graphicspath`.
 - Keep the existing TikZ end-to-end workflow figure.
 - Add `03_olap_outputs.png` as a full-width figure for department demand and hourly timing behavior.
 - Keep `10_orders_by_day.png` as the day-of-week order and basket-size evidence figure.
@@ -36,7 +36,7 @@ Create a new manuscript at [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/Retai
 - Update captions so each figure/table states the backing report table or dashboard query surface where relevant.
 
 ## Interfaces / Artifacts
-- New deliverable: [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/RetailPulse/Docs/Submission/IEEE_Paper_v3.tex).
+- New deliverable: [IEEE_Paper_v3.tex](c:/D Drive/Projects/6th Sem/RetailPulse/docs/Submission/IEEE_Paper_v3.tex).
 - No runtime or code API changes.
 - Submission asset set expands from the current two local figures to the selected release-safe screenshot set needed by v3.
 

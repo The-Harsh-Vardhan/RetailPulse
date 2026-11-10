@@ -160,9 +160,9 @@ Use this order:
 2. `notebooks/12_report_pack.py`
 3. `notebooks/13_predictive_analysis.py`
 4. `notebooks/14_prescriptive_analysis.py`
-5. `Docs/dashboard-output-diagrams.md`
+5. `docs/dashboard-output-diagrams.md`
 6. `assets/screenshots/`
-7. `Docs/current-production-state.md`
+7. `docs/current-production-state.md`
 
 ## Optional Docker Quickstart
 
@@ -243,10 +243,10 @@ Clone repo
 
 ## More Detailed Docs
 
-- [Docs/RetailPulse Handbook.md](Docs/RetailPulse%20Handbook.md)
-- [Docs/rebuild-from-scratch.md](Docs/rebuild-from-scratch.md)
-- [Docs/dashboard-output-diagrams.md](Docs/dashboard-output-diagrams.md)
-- [Docs/current-production-state.md](Docs/current-production-state.md)
-- [Docs/production-runbook.md](Docs/production-runbook.md)
-- [Docs/release-checklist.md](Docs/release-checklist.md)
+- [docs/RetailPulse Handbook.md](docs/RetailPulse%20Handbook.md)
+- [docs/rebuild-from-scratch.md](docs/rebuild-from-scratch.md)
+- [docs/dashboard-output-diagrams.md](docs/dashboard-output-diagrams.md)
+- [docs/current-production-state.md](docs/current-production-state.md)
+- [docs/production-runbook.md](docs/production-runbook.md)
+- [docs/release-checklist.md](docs/release-checklist.md)
 

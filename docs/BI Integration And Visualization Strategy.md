@@ -7,7 +7,7 @@ This note explains the current RetailPulse visualization stack, how to improve i
 
 ### Implemented in repo
 - Canonical dashboard queries in `sql/retailpulse_dashboard_queries.sql`
-- Dashboard build spec and operator guide in `Docs/databricks-dashboard-spec.md` and `Docs/databricks-dashboard-ui-guide.md`
+- Dashboard build spec and operator guide in `docs/databricks-dashboard-spec.md` and `docs/databricks-dashboard-ui-guide.md`
 - Evidence pack under `assets/screenshots/`
 - Notebook fallback surface in `notebooks/12_report_pack.py`
 

@@ -16,7 +16,7 @@ That matters because the working tree already contains meaningful project progre
 - Updated `notebooks/11_optimize.py`
 - Updated `notebooks/12_report_pack.py`
 - Updated generated notebook mirrors in `notebooks_ipynb/`
-- New showcase docs: `Docs/showcase-summary.md` and `Docs/demo-script.md`
+- New showcase docs: `docs/showcase-summary.md` and `docs/demo-script.md`
 
 ## What’s Actually Done
 
@@ -88,11 +88,11 @@ During this audit, these local checks passed:
 This is not just code anymore. The repo already has report and presentation scaffolding:
 
 - `README.md`
-- `Docs/Executive Summary.md`
-- `Docs/Grocery Sales Analytics & Recommendation on Databricks_ 14-Day Plan.md`
-- `Docs/rebuild-from-scratch.md`
-- `Docs/showcase-summary.md`
-- `Docs/demo-script.md`
+- `docs/Executive Summary.md`
+- `docs/Grocery Sales Analytics & Recommendation on Databricks_ 14-Day Plan.md`
+- `docs/rebuild-from-scratch.md`
+- `docs/showcase-summary.md`
+- `docs/demo-script.md`
 
 That means the project is already past "implementation only" and into "presentation prep" territory.
 
@@ -120,7 +120,7 @@ The OLAP notebook displays outputs, but it does not persist them as report table
 
 - `notebooks/05_olap.py:63-84` displays `cube_df`, `rollup_df`, `basket_df`, and a comparison frame
 - `notebooks/12_report_pack.py:57-62` pulls persisted report tables for classifier, regression, clustering, streaming, optimization, and rules, but not OLAP outputs
-- `Docs/showcase-summary.md:107-111` claims every major deliverable is backed by a persisted output table
+- `docs/showcase-summary.md:107-111` claims every major deliverable is backed by a persisted output table
 
 That last claim is too strong. The project has persisted evidence for several major areas, but not for everything it says.
 
@@ -187,7 +187,7 @@ This is not a weak repo. It is a strong repo with a few credibility gaps in the 
 
 ### Should Do Before Submission
 - Persist OLAP outputs as report tables or soften the docs so they do not claim stronger evidence packaging than the notebooks provide.
-- Create one submission-facing artifact location such as `assets/screenshots/` or `Docs/artifacts/` and put the actual evidence there.
+- Create one submission-facing artifact location such as `assets/screenshots/` or `docs/artifacts/` and put the actual evidence there.
 - Tighten the README so "implemented now" and "future work later" are separated with zero ambiguity.
 - Make sure the new showcase docs, notebook changes, and README changes are committed together as one coherent submission state.
 

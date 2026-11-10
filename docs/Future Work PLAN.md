@@ -214,11 +214,11 @@
   - Databricks vs Streamlit architecture decision
   - production note about Free Edition
 - Add new docs:
-  - `Docs/Automation Architecture.md`
-  - `Docs/Canonical Retail Data Contract.md`
-  - `Docs/Upload And Mapping Guide.md`
-  - `Docs/Artifact Output Spec.md`
-  - `Docs/Operations And Recovery.md`
+  - `docs/Automation Architecture.md`
+  - `docs/Canonical Retail Data Contract.md`
+  - `docs/Upload And Mapping Guide.md`
+  - `docs/Artifact Output Spec.md`
+  - `docs/Operations And Recovery.md`
 - README should link to those docs and give two user paths:
   - operator / developer
   - business uploader / reviewer
